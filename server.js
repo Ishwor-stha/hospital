@@ -1,18 +1,15 @@
-const express=require("express");
+const express=require("express")
 const dotenv=require("dotenv");
+const doctorRoute=require("./routes/doctorRoute")
 
 
 
-
+dotenv.config()
 const app=express();
 app.use(express.json({limit:"10kb"}));
-dotenv.config();
-app.get("/",(req,res)=>{
-    res.send("helloworld");
-    res.send("helloworld");
 
-})
-
-app.listen(3000,()=>{
-    console.log("server is running on port 3000")
+app.use("/api/doctor",doctorRoute)
+app.listen(process.env.PORT||3000,()=>{
+    console.log(`Server is running on port ${process.env.PORT}`)
+    console.log(  `App is running on ${process.env.NODE_ENV} mode`)
 })
