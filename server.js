@@ -2,27 +2,31 @@ const express=require("express")
 const dotenv=require("dotenv");
 const doctorRoute=require("./routes/doctorRoute")
 const dbConnection=require("./utils/mongodb")
+const errorController=require("./controller/errorController")
+const patientRouter=require("./routes/patientRoute");
+const errorHandling = require("./utils/errorHandling");
 
 
 
 
 
 const app=express();
-dotenv.config()
+dotenv.config();
 app.use(express.json({limit:"10kb"}));
 
 
-dbConnection()
-app.use("/api/doctor",doctorRoute)
+dbConnection();
+app.use("/api/doctor",doctorRoute);
+app.use("/api/patient",patientRouter);
+
 
 
 app.all("*",(req,res,next)=>{
-    res.status(404).json({
-        status:false,
-        message:"Url Path Is Not Found"
-    })
-})
+  next(new errorHandling("Url Path Is Not Found",404))
+});
+
+app.use(errorController);
 app.listen(process.env.PORT||3000,()=>{
-    console.log(`Server is running on port ${process.env.PORT}`)
-    console.log(  `App is running on ${process.env.NODE_ENV} mode`)
+    console.log(`Server is running on port ${process.env.PORT}`);
+    console.log(  `App is running on ${process.env.NODE_ENV} mode`);
 })
