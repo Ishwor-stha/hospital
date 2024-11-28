@@ -1,4 +1,3 @@
-const { model } = require("mongoose")
 const patientModel = require("../models/patientMode")
 const emailValidation = require("../utils/emailValidation")
 const errorHandling = require("../utils/errorHandling")
@@ -6,6 +5,8 @@ const patientIdValidation = require("../utils/patientIdValidation")
 
 
 //@endPoint:localhost:3000/api/patient/get-patients
+//@desc:controller to get all patient 
+//@method:GET
 module.exports.getAllPatient = async (req, res, next) => {
     try {
         const patientDetails = await patientModel.find({})
@@ -24,6 +25,8 @@ module.exports.getAllPatient = async (req, res, next) => {
 
 
 // @endpoint:localhost:3000/api/patient/get-patient/:id
+//@desc:controller to get  patient  by patient id
+//@method:GET
 module.exports.getPatientByPatientId = async (req, res, next) => {
     try {
         if (!req.params.id) return next(new errorHandling("No patient id is provided", 404));
@@ -49,6 +52,8 @@ module.exports.getPatientByPatientId = async (req, res, next) => {
 
 
 // @endpoint:localhost:3000/api/patient/post-patients
+//@desc:controller to post   patient 
+//@method:POST
 
 module.exports.postPatient = async (req, res, next) => {
     try {
@@ -85,6 +90,8 @@ module.exports.postPatient = async (req, res, next) => {
 }
 
 // @endpoint localhost:3000/api/patient/update-patient/:id
+//@desc:controller to update patient 
+//@method:PATCH
 module.exports.updatePatient = async (req, res, next) => {
     try {
         // Ensure that request body is not empty
@@ -153,6 +160,8 @@ module.exports.updatePatient = async (req, res, next) => {
 };
 
 // @endpoint:localhost:3000/api/patient/delete-patient/:id
+//@desc:controller to delete  patient 
+//@method:DELETE
 
 module.exports.deletePatient = async (req, res, next) => {
     try {
