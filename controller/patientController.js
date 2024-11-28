@@ -1,3 +1,4 @@
+const { model } = require("mongoose")
 const patientModel = require("../models/patientMode")
 const emailValidation = require("../utils/emailValidation")
 const errorHandling = require("../utils/errorHandling")
@@ -116,10 +117,10 @@ module.exports.updatePatient = async (req, res, next) => {
             if (!updateEmergency.relationship) {
                 updateEmergency.relationship = dbEmergencyContact.relationship;
             }
-            if (!updateEmergency.phone ) {
+            if (!updateEmergency.phone) {
                 updateEmergency.phone = dbEmergencyContact.phone;
             }
-            if (!updateEmergency.name ) {
+            if (!updateEmergency.name) {
                 updateEmergency.name = dbEmergencyContact.name;
             }
         }
@@ -137,7 +138,7 @@ module.exports.updatePatient = async (req, res, next) => {
 
         // Update the patient document in the database
         const updatedPatient = await patientModel.findByIdAndUpdate(id, updatedData, { new: true });
-        if(!updatedPatient) return next(new errorHandling("Error updating Data",400))
+        if (!updatedPatient) return next(new errorHandling("Error updating Data", 400))
 
         // Return the success response with updated patient details
         res.status(200).json({
@@ -150,4 +151,24 @@ module.exports.updatePatient = async (req, res, next) => {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 };
+
+// @endpoint:localhost:3000/api/patient/delete-patient/:id
+
+module.exports.deletePatient = async (req, res, next) => {
+    try {
+        if (!req.params.id) return next(new errorHandling("No patient id is given", 400));
+        const id = req.params.id;
+        const deletePatient = await patientModel.findByIdAndDelete(id);
+        if (!deletePatient) return next(new errorHandling("No patient found", 404));
+
+        res.status(200).json({
+            stauts: true,
+            message: `${deletePatient.name} deleted sucessfully`
+        });
+    } catch (error) {
+            return next(new errorHandling(error.message,error.statusCode||500))
+    }
+
+
+}
 
