@@ -9,6 +9,7 @@ const patientIdValidation = require("../utils/patientIdValidation")
 //@method:GET
 module.exports.getAllPatient = async (req, res, next) => {
     try {
+        
         const patientDetails = await patientModel.find({})
         if (!patientDetails || patientDetails <= 0) {
             return next(new errorHandling("No patient in database", 404));
@@ -180,4 +181,23 @@ module.exports.deletePatient = async (req, res, next) => {
 
 
 }
+//@endpoint:  localhost:3000/api/patient/search
+//@method:GET
+//@desc:Get patient details by their name or contact
 
+module.exports.getPatientByName=async(req,res,next)=>{
+    try{if(Object.keys(req.query).length<=0) return next(new errorHandling("No query is given",404))
+        let searching={}
+        if(req.query.name) searching["name"]={ $regex: req.query.name, $options: "i" };//case inscensitive and finds name similar to given input
+        if(req.query.patientId) searching["contact"]=req.query.contact;
+        const details=await patientModel.find(searching)
+        if(!details ||details<=0) return next(new errorHandling("No patient found",404))
+        res.json({
+            message:"sucess",
+            details
+        })
+
+    }catch(error){
+        return next(new errorHandling(error.message,error.statusCode||500))
+    }
+}
