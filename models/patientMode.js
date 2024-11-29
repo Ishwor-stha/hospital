@@ -79,6 +79,6 @@ const patientSchema = mongoose.Schema({
 });
 
 // Create and export the model
-const Patient = mongoose.model('Patient', patientSchema);
+const Patient = mongoose.model('Patients', patientSchema);
 
 module.exports = Patient;
