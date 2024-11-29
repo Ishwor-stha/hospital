@@ -4,7 +4,9 @@ const doctorRoute=require("./routes/doctorRoute")
 const dbConnection=require("./utils/mongodb")
 const errorController=require("./controller/errorController")
 const patientRouter=require("./routes/patientRoute");
+const adminRoute=require("./routes/adminRoutes")
 const errorHandling = require("./utils/errorHandling");
+const cookieParser=require("cookie-parser")
 
 
 
@@ -12,12 +14,15 @@ const errorHandling = require("./utils/errorHandling");
 
 const app=express();
 dotenv.config();
+app.use(cookieParser())
 app.use(express.json({limit:"10kb"}));
 
 
 dbConnection();
 app.use("/api/doctor",doctorRoute);
 app.use("/api/patient",patientRouter);
+app.use("/api/admin",adminRoute);
+
 
 
 

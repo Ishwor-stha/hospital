@@ -5,7 +5,7 @@ const medicalRecordSchema = mongoose.Schema({
     patient_id: {
         type: String,
         required: [true, "Patient ID is required"],
-        ref: "Patients, // Establishes a relationship with the Patient model
+        ref: "Patients", // Establishes a relationship with the Patient model
     },
 
     // Date of the Record

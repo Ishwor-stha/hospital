@@ -10,6 +10,7 @@ const patientIdValidation = require("../utils/patientIdValidation")
 module.exports.getAllPatient = async (req, res, next) => {
     try {
         // fetch all paatient data
+        
         const patientDetails = await patientModel.find({})
         // no patient
         if (!patientDetails || patientDetails <= 0) {
@@ -66,6 +67,8 @@ module.exports.getPatientByPatientId = async (req, res, next) => {
 
 module.exports.postPatient = async (req, res, next) => {
     try {
+
+        if(req.admin.role==="doctor")return next(new errorHandling("Doctor not allowed to create a new patient",404))
         // no body
         if (!req.body) return next(new errorHandling("Empty fields", 404));
 // if email is provided
@@ -107,6 +110,8 @@ module.exports.postPatient = async (req, res, next) => {
 //@method:PATCH
 module.exports.updatePatient = async (req, res, next) => {
     try {
+        if(req.admin.role==="doctor")return next(new errorHandling("Doctor not allowed to update the details of patient",404))
+
         // Ensure that request body is not empty
         if (Object.keys(req.body).length === 0) {
             return next(new errorHandling("No patient detail is given to update", 400));
@@ -179,6 +184,8 @@ module.exports.updatePatient = async (req, res, next) => {
 
 module.exports.deletePatient = async (req, res, next) => {
     try {
+        if(req.admin.role==="doctor")return next(new errorHandling("Doctor not allowed to delete  patient",404))
+
         // no request data in params
         if (!req.params.id) return next(new errorHandling("No patient id is given", 400));
         // from url
