@@ -4,6 +4,10 @@ const bcrypt = require("bcryptjs")
 const validateEmail = require("../utils/emailValidation")
 const jwt = require("jsonwebtoken")
 
+
+
+
+//@desc:check whether a user is login or not 
 module.exports.checkJwt = (req, res, next) => {
     try {
         const token = req.cookies.auth_token;
@@ -27,16 +31,25 @@ module.exports.checkJwt = (req, res, next) => {
 };
 
 
+//@endpoint:localhost:3000/api/admin/get-admin
+//@method:GET
+//@desc:Get admin details 
 module.exports.getAdmin = async (req, res, next) => {
     try {
         const admins = await adminModel.find({})
+        if(!admins ||Object.keys(admins).length<=0) return next(new errorHandling("There is no admin in database"))
         res.status(200).json({
+            status:true,
             admins
         })
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500))
     }
 }
+
+//@endpoint:localhost:3000/api/admin/create-admin
+//@method:POST
+//@desc:CREATE ADMIN BY ROOT USER
 module.exports.createAdmin = async (req, res, next) => {
     try {
         if (req.admin.role != "root") return next(new errorHandling("You donot have enough permission", 404))
@@ -61,7 +74,9 @@ module.exports.createAdmin = async (req, res, next) => {
 }
 
 
-
+//@endpoint:localhost:3000/api/admin/login-admin
+//@method:post
+//@desc:admin login 
 module.exports.adminLogin = async (req, res, next) => {
     try {
         const keys = Object.keys(req.body)
@@ -103,7 +118,9 @@ module.exports.adminLogin = async (req, res, next) => {
     }
 }
 
-
+//@endpoint:localhost:3000/api/admin/logout-admin
+//@method:delete
+//@desc:logout admin  
 module.exports.logoutAdmin = (req, res, next) => {
     try {
         // Clear the cookie by setting it to a past date
@@ -123,6 +140,11 @@ module.exports.logoutAdmin = (req, res, next) => {
     }
 };
 
+
+
+//@endpoint:localhost:3000/api/admin/delete-admin
+//@method:delete
+//@desc:delete admin  
 module.exports.deleteAdmin = async (req, res, next) => {
     try {
         if (req.admin.role !== "root") return next(new errorHandling("You dont have enough permission to delete admin", 404));
@@ -140,7 +162,9 @@ module.exports.deleteAdmin = async (req, res, next) => {
     }
 }
 
-
+//@endpoint:localhost:3000/api/admin/update-admin
+//@method:patch
+//@desc:update admin details 
 module.exports.updateAdmin = async (req, res, next) => {
     try {
 
@@ -195,7 +219,9 @@ module.exports.updateAdmin = async (req, res, next) => {
     }
 };
 
-
+//@endpoint:localhost:3000/api/admin/update-admin-root
+//@method:patch
+//@desc:update admin by root user 
 
 module.exports.updateAdminByRoot = async (req, res, next) => {
     try {
