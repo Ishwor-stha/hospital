@@ -195,7 +195,7 @@ module.exports.updateAdmin = async (req, res, next) => {
 
 // module.exports.updateAdminByRoot = (req, res, next) => {
 //     try {
-//         if (req.admin.role !== "root") return next(new errorHandling("You are not authorized ", 404));
+//         if (req.admin.role !== "root") return next(new errorHandling("You are not authorized ", 403 ));
 //         if (!req.params.adminId || Object.keys(req.params) <= 0) return next(new errorHandling("Admin id is missing", 404));
 //     } catch (error) {
 //         return next(errorHandling(error.message, error.statusCode || 500));

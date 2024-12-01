@@ -7,6 +7,7 @@ Router.route("/create-admin").post(checkJwt,createAdmin)
 Router.route("/login-admin").post(adminLogin)
 Router.route("/logout-admin").delete(checkJwt,logoutAdmin)
 Router.route("/delete-admin/:id").delete(checkJwt,deleteAdmin)
+Router.route("/update-admin").patch(checkJwt,updateAdmin)
 
 
 
