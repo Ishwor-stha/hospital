@@ -27,14 +27,14 @@ module.exports.checkJwt = (req, res, next) => {
 };
 
 
-module.exports.getAdmin=async(req,res,next)=>{
-    try{
-        const admins=await adminModel.find({})
+module.exports.getAdmin = async (req, res, next) => {
+    try {
+        const admins = await adminModel.find({})
         res.status(200).json({
             admins
         })
-    }catch(error){
-        return next(new errorHandling(error.message,error.statusCode || 500))
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500))
     }
 }
 module.exports.createAdmin = async (req, res, next) => {
@@ -127,15 +127,77 @@ module.exports.deleteAdmin = async (req, res, next) => {
     try {
         if (req.admin.role !== "root") return next(new errorHandling("You dont have enough permission to delete admin", 404));
         if (!req.params.id || Object.keys(req.params) <= 0) return next(new errorHandling("No id is given", 404));
-        let { id } = req.params
+        let { id } = req.params;
         const del = await adminModel.findByIdAndDelete(id);
-        if(!del || Object.keys(del)<=0) return next(new errorHandling("No data in database"),404)
+        if (!del || Object.keys(del) <= 0) return next(new errorHandling("No data in database"), 404)
         res.status(200).json({
-                status:true,
-                message:`${del.name} deleted sucessfully`
+            status: true,
+            message: `${del.name} deleted sucessfully`
         })
     } catch (error) {
-        return next(new errorHandling(error.message,error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
 
     }
 }
+
+
+module.exports.updateAdmin = async (req, res, next) => {
+    try {
+
+        if (!req.body || Object.keys(req.body).length === 0) {
+            return next(new errorHandling("Empty fields", 400));
+        }
+
+        const { id } = req.admin._id; // `id` is passed from checkjwt middleware
+        if (!id) {
+            return next(new errorHandling("ID not provided", 400));
+        }
+
+        const inputFields = ["name", "password", "confirmPassword", "email"];
+        const upload = {};
+        // Validate password and confirmPassword match (if provided)
+        if (req.body.password && upload.password !== upload.confirmPassword) {
+            return next(new errorHandling("Passwords do not match", 400));
+        }
+        // Filter valid fields from the request body
+        for (const key in req.body) {
+            if (inputFields.includes(key)) {
+                if (key === "password") {
+                    const hashedPassword = bcrypt.hash(password, 10);
+                    upload["password"] = hashedPassword
+                    req.body.confirmPassword=undefined
+                    
+                } else {
+                    upload[key] = req.body[key];
+                }
+            }
+        }
+      
+        // Update the document
+        const update = await adminModel.findByIdAndUpdate(id, upload, {
+            new: true, // Return the updated document
+            runValidators: true // Run schema validators
+        });
+
+        if (!update) {
+            return next(new errorHandling("Admin not found", 404));
+        }
+
+        res.status(200).json({
+            status: true,
+            message: `${Object.keys(upload).join(", ")} updated successfully`,
+
+        });
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500));
+    }
+};
+
+// module.exports.updateAdminByRoot = (req, res, next) => {
+//     try {
+//         if (req.admin.role !== "root") return next(new errorHandling("You are not authorized ", 404));
+//         if (!req.params.adminId || Object.keys(req.params) <= 0) return next(new errorHandling("Admin id is missing", 404));
+//     } catch (error) {
+//         return next(errorHandling(error.message, error.statusCode || 500));
+//     }
+// }
