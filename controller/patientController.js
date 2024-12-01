@@ -45,7 +45,7 @@ module.exports.getPatientByPatientId = async (req, res, next) => {
         // no patient detail
         if (!patientDetail || patientDetail <= 0) return next(new errorHandling("Cannot find patient", 404));
 
-// send detail
+    // send detail
         res.status(200).json({
             status: true,
             patientDetail
@@ -110,6 +110,7 @@ module.exports.postPatient = async (req, res, next) => {
 //@method:PATCH
 module.exports.updatePatient = async (req, res, next) => {
     try {
+
         if(req.admin.role==="doctor")return next(new errorHandling("Doctor not allowed to update the details of patient",404))
 
         // Ensure that request body is not empty

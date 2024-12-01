@@ -187,7 +187,7 @@ module.exports.updateAdmin = async (req, res, next) => {
 
         res.status(200).json({
             status: true,
-            message: `${Object.keys(upload).filter(key => key!=="confirmPassword").join(", ")} updated successfully`,
+            message: `${Object.keys(upload).filter(key => key !== "confirmPassword").join(", ")} updated successfully`
 
         });
     } catch (error) {
@@ -195,12 +195,54 @@ module.exports.updateAdmin = async (req, res, next) => {
     }
 };
 
-module.exports.updateAdminByRoot = (req, res, next) => {
+
+
+module.exports.updateAdminByRoot = async (req, res, next) => {
     try {
-        if (req.admin.role !== "root") return next(new errorHandling("You are not authorized ", 403 ));
-        if (!req.params.adminId || Object.keys(req.params) <= 0) return next(new errorHandling("Admin id is missing", 404));
+        if (req.admin.role !== "root") return next(new errorHandling("You are not authorized ", 403));
+        const id = req.params.id
         
+        const check = await adminModel.findById(id)
+        if (!check || Object.keys(check).length <= 0) return next(new errorHandling("No admin found for this admin"), 404)
+
+        const inputFields = ["name", "password", "confirmPassword", "email"];
+        const upload = {};
+        if(!req.body ||Object.keys(req.body).length<=0) return next(new errorHandling("Empty field to update",404))
+        // Validate password and confirmPassword match (if provided)
+        if (req.body.password) {
+            if (req.body.password !== req.body.confirmPassword) {
+                return next(new errorHandling("Passwords do not match with confirm password", 400));
+            }
+        }
+
+        // Filter valid fields from the request body
+        for (const key in req.body) {
+            if (inputFields.includes(key)) {
+                if (key === "password") {
+                    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+                    upload["password"] = hashedPassword
+                    req.body.confirmPassword = undefined
+
+                } else {
+                    upload[key] = req.body[key];
+                }
+            }
+        }
+
+        // Update the document
+        const update = await adminModel.findByIdAndUpdate(id, upload, {
+            new: true, // Return the updated document
+            runValidators: true // Run schema validators
+        });
+
+        res.status(200).json({
+            status:true,
+            message: `${Object.keys(upload).filter(key => key !== "confirmPassword").join(", ")} updated successfully`
+            
+        })
+
+
     } catch (error) {
-        return next(errorHandling(error.message, error.statusCode || 500));
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
