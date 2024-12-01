@@ -53,11 +53,11 @@ adminSchema.pre("save", async function (next) {
 
     // If the password is modified, hash it before saving
     if (this.isModified("password")) {
-        this.password = await bcrypt.hash(this.password, 10);
+        this.password = bcrypt.hashSync(this.password, 10);
         this.confirmPassword = undefined; // Remove confirmPassword after hashing
     }
 
-    next(); // Proceed with saving the document
+    next(); 
 });
 
 // Create and export the admin model

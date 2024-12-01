@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const emailValidation=require("../utils/emailValidation")
+const emailValidation = require("../utils/emailValidation");
+const bcrypt = require("bcryptjs");
 
 // Define the Doctor Schema
 const doctorSchema = mongoose.Schema({
@@ -49,7 +50,10 @@ const doctorSchema = mongoose.Schema({
         type: String,
         required: [true, "Email is required"],
         unique: true,
-        match: [emailValidation(this.email), "Please enter a valid email address"]
+        validate: {
+            validator: emailValidation,
+            message: "Please enter a valid email address",
+        },
     },
 
     // Availability Schedule (Optional)
@@ -57,33 +61,54 @@ const doctorSchema = mongoose.Schema({
         type: [String], // Example: ['Monday 9am-12pm', 'Wednesday 2pm-5pm']
         default: [],
     },
-    password:{
-        type:String,
-        require:[true,"password is missing"],
-        min:[8,"Password should be in minimum of eight characters"]
 
+    password: {
+        type: String,
+        required: [true, "Password is required"],
+        minlength: [8, "Password must be at least 8 characters long"],
     },
-    confirmPassword:{
-        type:String,
-        require:[true,"Confirm password is missing"],
-        validate:{
-            validator:function(confirmPassword){
-                return this.password===confirmPassword
-            }
+
+    confirmPassword: {
+        type: String,
+        required: [true, "Confirm password is required"],
+        validate: {
+            validator: function (confirmPassword) {
+                return this.password === confirmPassword;
+            },
+            message: "Passwords must match",
         },
-        message:"Confirm password and password should match"
     },
-    role:{
-        type:String,
-        enum:["doctor"],
-        default:Doctor
-    }
 
-    
+    role: {
+        type: String,
+        enum: ["doctor"],
+        default: "doctor",
+    },
 });
 
+// Middleware: Pre-save Hook
+doctorSchema.pre("save", async function (next) {
+    try {
+        // Check if email exists in the "admin" collection
+        const existingAdmin = await mongoose.model("admin").findOne({ email: this.email });
+
+        if (existingAdmin) {
+            return next(new Error("Email already exists in the admin collection"));
+        }
+
+        // Hash password if modified
+        if (this.isModified("password")) {
+            this.password = await bcrypt.hash(this.password, 10);
+            this.confirmPassword = undefined; // Remove confirmPassword field after validation
+        }
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
 
 // Create and export the model
-const Doctor = mongoose.model('Doctor', doctorSchema);
+const Doctor = mongoose.model("Doctor", doctorSchema);
 
 module.exports = Doctor;
