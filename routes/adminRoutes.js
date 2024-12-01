@@ -1,4 +1,4 @@
-const { getAdmin,createAdmin,adminLogin,checkJwt,logoutAdmin ,deleteAdmin} = require("../controller/adminAuthController")
+const { getAdmin,createAdmin,adminLogin,checkJwt,logoutAdmin ,deleteAdmin,updateAdmin} = require("../controller/adminAuthController")
 
 
 const Router=require("express").Router()

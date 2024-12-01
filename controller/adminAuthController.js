@@ -147,8 +147,7 @@ module.exports.updateAdmin = async (req, res, next) => {
         if (!req.body || Object.keys(req.body).length === 0) {
             return next(new errorHandling("Empty fields", 400));
         }
-
-        const { id } = req.admin._id; // `id` is passed from checkjwt middleware
+        const id = req.admin.adminId; // `id` is passed from checkjwt middleware
         if (!id) {
             return next(new errorHandling("ID not provided", 400));
         }
@@ -156,23 +155,26 @@ module.exports.updateAdmin = async (req, res, next) => {
         const inputFields = ["name", "password", "confirmPassword", "email"];
         const upload = {};
         // Validate password and confirmPassword match (if provided)
-        if (req.body.password && upload.password !== upload.confirmPassword) {
-            return next(new errorHandling("Passwords do not match", 400));
+        if (req.body.password) {
+            if (req.body.password !== req.body.confirmPassword) {
+                return next(new errorHandling("Passwords do not match with confirm password", 400));
+            }
         }
+
         // Filter valid fields from the request body
         for (const key in req.body) {
             if (inputFields.includes(key)) {
                 if (key === "password") {
-                    const hashedPassword = bcrypt.hash(password, 10);
+                    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
                     upload["password"] = hashedPassword
-                    req.body.confirmPassword=undefined
-                    
+                    req.body.confirmPassword = undefined
+
                 } else {
                     upload[key] = req.body[key];
                 }
             }
         }
-      
+
         // Update the document
         const update = await adminModel.findByIdAndUpdate(id, upload, {
             new: true, // Return the updated document
@@ -185,7 +187,7 @@ module.exports.updateAdmin = async (req, res, next) => {
 
         res.status(200).json({
             status: true,
-            message: `${Object.keys(upload).join(", ")} updated successfully`,
+            message: `${Object.keys(upload).filter(key => key!=="confirmPassword").join(", ")} updated successfully`,
 
         });
     } catch (error) {
@@ -193,11 +195,12 @@ module.exports.updateAdmin = async (req, res, next) => {
     }
 };
 
-// module.exports.updateAdminByRoot = (req, res, next) => {
-//     try {
-//         if (req.admin.role !== "root") return next(new errorHandling("You are not authorized ", 403 ));
-//         if (!req.params.adminId || Object.keys(req.params) <= 0) return next(new errorHandling("Admin id is missing", 404));
-//     } catch (error) {
-//         return next(errorHandling(error.message, error.statusCode || 500));
-//     }
-// }
+module.exports.updateAdminByRoot = (req, res, next) => {
+    try {
+        if (req.admin.role !== "root") return next(new errorHandling("You are not authorized ", 403 ));
+        if (!req.params.adminId || Object.keys(req.params) <= 0) return next(new errorHandling("Admin id is missing", 404));
+        
+    } catch (error) {
+        return next(errorHandling(error.message, error.statusCode || 500));
+    }
+}
