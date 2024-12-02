@@ -40,10 +40,10 @@ module.exports.getAdmin = async (req, res, next) => {
         // fetch all detalil from database
         const admins = await adminModel.find({})
         // no details on databse
-        if(!admins ||Object.keys(admins).length<=0) return next(new errorHandling("There is no admin in database"))
-            // send sucess response
+        if (!admins || Object.keys(admins).length <= 0) return next(new errorHandling("There is no admin in database"))
+        // send sucess response
         res.status(200).json({
-            status:true,
+            status: true,
             admins
         })
     } catch (error) {
@@ -58,10 +58,10 @@ module.exports.createAdmin = async (req, res, next) => {
     try {
         // allow only if the user is root
         if (req.admin.role != "root") return next(new errorHandling("You donot have enough permission", 404))
-            // req.body is empty
+        // req.body is empty
         if (Object.keys(req.body).length <= 0) return next(new errorHandling("No data is given", 404))
         // list of possible fields
-            let details = ["name", "email", "password", "confirmPassword"];
+        let details = ["name", "email", "password", "confirmPassword"];
         let createAdm = {}
         // iterate all keys on req.body 
         for (key in req.body) {
@@ -102,23 +102,23 @@ module.exports.adminLogin = async (req, res, next) => {
         const { email, password } = req.body
         // validate the email
         if (!validateEmail(email)) return next(new errorHandling("Please enter valid email address", 400))
-// search email on database
+        // search email on database
         const admin = await adminModel.findOne({ email })
-// if no email found then send error
+        // if no email found then send error
 
         if (!admin || admin.length <= 0) return next(new errorHandling("No admin found by this email", 404))
-//  store the password of database
+        //  store the password of database
         const dbPassword = admin.password
         // compare database password with user password
         const isvalid = await bcrypt.compare(password, dbPassword)
-// if password is not valid then throw error
+        // if password is not valid then throw error
         if (!isvalid) return next(new errorHandling("Password is incorrect", 400))
         // create payload for jwt 
-            const payload = {
+        const payload = {
             adminId: admin._id,
             role: admin.role,
         };
-// create token
+        // create token
         const token = jwt.sign(payload, process.env.jwtSecretKey, { expiresIn: '1h' });
         // send cookie to the browser
         res.cookie("auth_token", token, {
@@ -173,7 +173,7 @@ module.exports.deleteAdmin = async (req, res, next) => {
         if (req.admin.role !== "root") return next(new errorHandling("You dont have enough permission to delete admin", 404));
         // if id is not given on url
         if (!req.params.id || Object.keys(req.params) <= 0) return next(new errorHandling("No id is given", 404));
-    // id from url
+        // id from url
         let { id } = req.params;
         // delete admin
         const del = await adminModel.findByIdAndDelete(id);
@@ -203,7 +203,7 @@ module.exports.updateAdmin = async (req, res, next) => {
         if (!id) {
             return next(new errorHandling("ID not provided", 400));
         }
-// array of possible fields
+        // array of possible fields
         const inputFields = ["name", "password", "confirmPassword", "email"];
         const upload = {};
         // Validate password and confirmPassword match (if provided)
@@ -237,7 +237,7 @@ module.exports.updateAdmin = async (req, res, next) => {
             return next(new errorHandling("Admin not found", 404));
         }
 
-// send sucess response
+        // send sucess response
         res.status(200).json({
             status: true,
             message: `${Object.keys(upload).filter(key => key !== "confirmPassword").join(", ")} updated successfully`
@@ -259,16 +259,16 @@ module.exports.updateAdminByRoot = async (req, res, next) => {
         // id from url
         const id = req.params.id
         // if no id on url
-        if(!id) return next(new errorHandling("Id is not given"),400);
+        if (!id) return next(new errorHandling("Id is not given"), 400);
         // check the details from id
         const check = await adminModel.findById(id)
         // if no details found then send error
         if (!check || Object.keys(check).length <= 0) return next(new errorHandling("No admin found for this admin"), 404)
-// possible fields key
+        // possible fields key
         const inputFields = ["name", "password", "confirmPassword", "email"];
         const upload = {};
         // if req.body is empty then send error messaage
-        if(!req.body ||Object.keys(req.body).length<=0) return next(new errorHandling("Empty field to update",404))
+        if (!req.body || Object.keys(req.body).length <= 0) return next(new errorHandling("Empty field to update", 404))
         // Validate password and confirmPassword match (if provided)
         if (req.body.password) {
             // check the confirmPassword and password
@@ -299,9 +299,9 @@ module.exports.updateAdminByRoot = async (req, res, next) => {
 
         // send sucess response
         res.status(200).json({
-            status:true,
+            status: true,
             message: `${Object.keys(upload).filter(key => key !== "confirmPassword").join(", ")} updated successfully`
-            
+
         })
 
 
