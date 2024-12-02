@@ -1,8 +1,14 @@
 const express = require("express");
-const {createPatientRecord}= require("../controller/doctorController.js");
+const {doctorLogin,updateDoctor}= require("../controller/doctorController.js");
+const { checkJwt } = require("../controller/adminAuthController.js");
+
 
 // Create the router and define the route
-const router = express.Router();
+const Router = express.Router();
+
+Router.route("/login-doctor").post(doctorLogin);
+Router.route("/update-doctor").patch(checkJwt,updateDoctor)
+
 
 
 
@@ -11,4 +17,4 @@ const router = express.Router();
 // router.route("/").post(createPatientRecord);  // Define the GET route
 
 // Export the router using CommonJS syntax
-module.exports = router;
+module.exports = Router;

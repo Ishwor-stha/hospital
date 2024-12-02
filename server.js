@@ -4,6 +4,7 @@ const doctorRoute=require("./routes/doctorRoute")
 const dbConnection=require("./utils/mongodb")
 const errorController=require("./controller/errorController")
 const patientRouter=require("./routes/patientRoute");
+const logoutRoute=require("./routes/logOutRoute")
 const adminRoute=require("./routes/adminRoutes")
 const errorHandling = require("./utils/errorHandling");
 const cookieParser=require("cookie-parser")
@@ -19,9 +20,11 @@ app.use(express.json({limit:"10kb"}));
 
 
 dbConnection();
+app.use("/api",logoutRoute)
 app.use("/api/doctor",doctorRoute);
 app.use("/api/patient",patientRouter);
 app.use("/api/admin",adminRoute);
+
 
 
 

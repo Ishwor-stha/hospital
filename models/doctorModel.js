@@ -51,7 +51,9 @@ const doctorSchema = mongoose.Schema({
         required: [true, "Email is required"],
         unique: true,
         validate: {
-            validator: emailValidation,
+            validator:function(email){
+                return emailValidation(email);
+            },
             message: "Please enter a valid email address",
         },
     },
@@ -89,13 +91,8 @@ const doctorSchema = mongoose.Schema({
 // Middleware: Pre-save Hook
 doctorSchema.pre("save", async function (next) {
     try {
-        // Check if email exists in the "admin" collection
-        const existingAdmin = await mongoose.model("admin").findOne({ email: this.email });
-
-        if (existingAdmin) {
-            return next(new Error("Email already exists in the admin collection"));
-        }
-
+        
+     
         // Hash password if modified
         if (this.isModified("password")) {
             this.password = await bcrypt.hash(this.password, 10);
