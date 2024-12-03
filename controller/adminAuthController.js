@@ -1,7 +1,7 @@
 const adminModel = require("../models/adminModel");
-const errorHandling = require("../utils/errorHandling")
-const bcrypt = require("bcryptjs")
-const validateEmail = require("../utils/emailValidation")
+const errorHandling = require("../utils/errorHandling");
+const bcrypt = require("bcryptjs");
+const validateEmail = require("../utils/emailValidation");
 const jwt = require("jsonwebtoken");
 const emailValidation = require("../utils/emailValidation");
 
@@ -15,20 +15,20 @@ module.exports.checkJwt = (req, res, next) => {
         const token = req.cookies.auth_token;
         // no token
         if (!token) {
-            return next(new errorHandling("Please login first", 403))
+            return next(new errorHandling("Please login first", 403));
 
         }
         // check token
         jwt.verify(token, process.env.jwtSecretKey, (err, decode) => {
             if (err) {
-                return next(new errorHandling("Your Session Expired or invalid token login again", 403))
+                return next(new errorHandling("Your Session Expired or invalid token login again", 403));
             }
             req.admin = decode
 
             next()
         })
     } catch (error) {
-        return next(new errorHandling(error.message, 500))
+        return next(new errorHandling(error.message, 500));
     }
 };
 
@@ -38,18 +38,18 @@ module.exports.checkJwt = (req, res, next) => {
 //@desc:Get admin details 
 module.exports.getAdmin = async (req, res, next) => {
     try {
-        if (req.admin.role != "root") return next(new errorHandling("You are not authorized to perform this task", 400))
-        // fetch all detalil from database
-        const admins = await adminModel.find({}, "name role email -_id")
-        // no details on databse
-        if (!admins || Object.keys(admins).length <= 0) return next(new errorHandling("There is no admin in database", 404))
+        if (req.admin.role != "root") return next(new errorHandling("You are not authorized to perform this task", 400));
+        // fetch all detalil from database;
+        const admins = await adminModel.find({}, "name role email -_id");
+        // no details on databse;
+        if (!admins || Object.keys(admins).length <= 0) return next(new errorHandling("There is no admin in database", 404));
         // send sucess response
         res.status(200).json({
             status: true,
             admins
-        })
+        });
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
 
@@ -59,31 +59,31 @@ module.exports.getAdmin = async (req, res, next) => {
 module.exports.createAdmin = async (req, res, next) => {
     try {
         // allow only if the user is root
-        if (req.admin.role != "root") return next(new errorHandling("You donot have enough permission", 404))
+        if (req.admin.role != "root") return next(new errorHandling("You donot have enough permission", 404));
         // req.body is empty
-        if (Object.keys(req.body).length <= 0) return next(new errorHandling("No data is given", 404))
+        if (Object.keys(req.body).length <= 0) return next(new errorHandling("No data is given", 404));
         // list of possible fields
         let details = ["name", "email", "password", "confirmPassword"];
-        let createAdm = {}
+        let createAdm = {};
         // iterate all keys on req.body 
         for (key in req.body) {
             // if key is presented on the array
             if (details.includes(key)) {
                 // store the value to the object
-                createAdm[key] = req.body[key]
+                createAdm[key] = req.body[key];
             }
         }
         // update the data on database
-        const upload = await adminModel.create(createAdm)
+        const upload = await adminModel.create(createAdm);
         // data update fails send error 
         if (!upload) return next(new errorHandling("cannot create Admin", 400));
         // send sucess message
         res.status(200).json({
             status: true,
             message: `${upload.name} admin created sucessfully`
-        })
+        });
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 
 }
@@ -101,7 +101,7 @@ module.exports.adminLogin = async (req, res, next) => {
             return next(new errorHandling("Request body must only contain 'email' and 'password'", 400));
         }
         // destructring the req.body 
-        const { email, password } = req.body
+        const { email, password } = req.body;
         // validate the email
         if (!validateEmail(email)) return next(new errorHandling("Please enter valid email address", 400));
         // search email on database
@@ -270,21 +270,19 @@ module.exports.updateAdminByRoot = async (req, res, next) => {
                 // check email on database
                 const check = await adminModel.find({ "email": req.body.email }, "email");
                 // if there is email on data base send error
-                if (Object.keys(check).length > 0) return next(new errorHandling("Email already exists", 404))
+                if (Object.keys(check).length > 0) return next(new errorHandling("Email already exists", 404));
 
             } else {
                 // if email validation fails
-                return next(new errorHandling("Please enter valid email address", 400))
+                return next(new errorHandling("Please enter valid email address", 400));
             }
         }
-
-
 
         // possible fields key
         const inputFields = ["name", "password", "confirmPassword", "email"];
         const upload = {};
         // if req.body is empty then send error messaage
-        if (!req.body || Object.keys(req.body).length <= 0) return next(new errorHandling("Empty field to update", 404))
+        if (!req.body || Object.keys(req.body).length <= 0) return next(new errorHandling("Empty field to update", 404));;
         // Validate password and confirmPassword match (if provided)
         if (req.body.password) {
             // check the confirmPassword and password
@@ -298,8 +296,8 @@ module.exports.updateAdminByRoot = async (req, res, next) => {
             if (inputFields.includes(key)) {
                 if (key === "password") {
                     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-                    upload["password"] = hashedPassword
-                    req.body.confirmPassword = undefined
+                    upload["password"] = hashedPassword;
+                    req.body.confirmPassword = undefined;
 
                 } else {
                     upload[key] = req.body[key];
@@ -318,7 +316,7 @@ module.exports.updateAdminByRoot = async (req, res, next) => {
             status: true,
             message: `${Object.keys(upload).filter(key => key !== "confirmPassword").join(", ")} updated successfully`
 
-        })
+        });
 
 
     } catch (error) {

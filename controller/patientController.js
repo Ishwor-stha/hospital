@@ -1,8 +1,7 @@
-const patientModel = require("../models/patientMode")
-const emailValidation = require("../utils/emailValidation")
-const errorHandling = require("../utils/errorHandling")
-const patientIdValidation = require("../utils/patientIdValidation")
-
+const patientModel = require("../models/patientMode");
+const emailValidation = require("../utils/emailValidation");
+const errorHandling = require("../utils/errorHandling");
+const patientIdValidation = require("../utils/patientIdValidation");
 
 //@endPoint:localhost:3000/api/patient/get-patients
 //@desc:controller to get all patient 
@@ -11,7 +10,7 @@ module.exports.getAllPatient = async (req, res, next) => {
     try {
         // fetch all paatient data
 
-        const patientDetails = await patientModel.find({}, "-__v ")
+        const patientDetails = await patientModel.find({}, "-__v ");
         // no patient
         if (!patientDetails || patientDetails <= 0) {
             return next(new errorHandling("No patient in database", 404));
@@ -68,7 +67,7 @@ module.exports.getPatientByPatientId = async (req, res, next) => {
 module.exports.postPatient = async (req, res, next) => {
     try {
         // if user is doctor then throw error(only root and admin user can create patient profile)
-        if (req.admin.role === "doctor") return next(new errorHandling("Doctor not allowed to create a new patient", 404))
+        if (req.admin.role === "doctor") return next(new errorHandling("Doctor not allowed to create a new patient", 404));
         // no body
         if (!req.body) return next(new errorHandling("Empty fields", 404));
         // if email is provided
@@ -76,7 +75,7 @@ module.exports.postPatient = async (req, res, next) => {
 
             // email validation
             if (!emailValidation(req.body.email)) {
-                return next(new errorHandling("Invalid email address", 400))
+                return next(new errorHandling("Invalid email address", 400));
             }
         }
 
@@ -98,7 +97,7 @@ module.exports.postPatient = async (req, res, next) => {
         res.status(200).json({
             status: true,
             message: `Patient ${upload.name} account created sucessfully `
-        })
+        });
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
@@ -110,11 +109,11 @@ module.exports.postPatient = async (req, res, next) => {
 //@method:PATCH
 module.exports.updatePatient = async (req, res, next) => {
     try {
-// if the user is doctor then throw error (only admin and root user can modify patients details)
-        if (req.admin.role === "doctor") return next(new errorHandling("Doctor not allowed to update the details of patient", 404))
-        if(!req.params.id ||Object.keys(req.params.id).length<=0) return next(new errorHandling("Id is missing on parameter",400))
+        // if the user is doctor then throw error (only admin and root user can modify patients details)
+        if (req.admin.role === "doctor") return next(new errorHandling("Doctor not allowed to update the details of patient", 404));
+        if (!req.params.id || Object.keys(req.params.id).length <= 0) return next(new errorHandling("Id is missing on parameter", 400));
         const id = req.params.id;
-    
+
 
         // Ensure that request body is not empty
         if (Object.keys(req.body).length === 0) {
@@ -125,10 +124,10 @@ module.exports.updatePatient = async (req, res, next) => {
         let updatedData = {};
         let updateEmergency = {};
 
-        
+
 
         // Fetch the patient from the database using their ID
-        const getDetail = await patientModel.findById(id,"emergency_contact");
+        const getDetail = await patientModel.findById(id, "emergency_contact");
         // no patient detail
         if (!getDetail) return next(new errorHandling("No patient found", 400));
         // 
@@ -167,8 +166,8 @@ module.exports.updatePatient = async (req, res, next) => {
         }
 
         // Update the patient document in the database
-        const updatedPatient = await patientModel.findByIdAndUpdate(id, updatedData, { new: true,projection:{name:1} });
-        if (!updatedPatient) return next(new errorHandling("Error updating Data", 400))
+        const updatedPatient = await patientModel.findByIdAndUpdate(id, updatedData, { new: true, projection: { name: 1 } });
+        if (!updatedPatient) return next(new errorHandling("Error updating Data", 400));
 
         // Return the success response with updated patient details
         res.status(200).json({
@@ -188,7 +187,8 @@ module.exports.updatePatient = async (req, res, next) => {
 
 module.exports.deletePatient = async (req, res, next) => {
     try {
-        if (req.admin.role === "doctor") return next(new errorHandling("Doctor not allowed to delete  patient", 404))
+        // if user is doctor then throw error 
+        if (req.admin.role === "doctor") return next(new errorHandling("Doctor not allowed to delete  patient", 404));
 
         // no request data in params
         if (!req.params.id) return next(new errorHandling("No patient id is given", 400));
@@ -197,13 +197,13 @@ module.exports.deletePatient = async (req, res, next) => {
         // delete patient 
         const deletePatient = await patientModel.findByIdAndDelete(id);
         if (!deletePatient) return next(new errorHandling("No patient found", 404));
-
+        // send sucess message
         res.status(200).json({
             stauts: true,
             message: `${deletePatient.name} deleted sucessfully`
         });
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 
 
@@ -211,26 +211,27 @@ module.exports.deletePatient = async (req, res, next) => {
 //@endpoint:localhost:3000/api/patient/search
 //@method:GET
 //@desc:Get patient details by their name or contact
-
 module.exports.getPatientByName = async (req, res, next) => {
     try {
         //no query
-        if (Object.keys(req.query).length <= 0) return next(new errorHandling("No query is given", 404))
-        let searching = {}
-
+        if (Object.keys(req.query).length <= 0) return next(new errorHandling("No query is given", 404));
+        let searching = {};
+        // if name is given on query
         if (req.query.name) searching["name"] = { $regex: req.query.name, $options: "i" };//case inscensitive and finds name similar to given input
-        if (req.query.patientId) searching["contact"] = req.query.contact;
+        // if contact is given on query
+
+        if (req.query.contact) searching["contact"] = req.query.contact;
         // find detail
-        const details = await patientModel.find(searching)
+        const details = await patientModel.find(searching, "-__v");
         // no details
-        if (!details || details <= 0) return next(new errorHandling("No patient found", 404))
+        if (!details || details <= 0) return next(new errorHandling("No patient found", 404));
         // send response
         res.json({
             message: "sucess",
             details
-        })
+        });
 
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }

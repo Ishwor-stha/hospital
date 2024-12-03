@@ -8,7 +8,7 @@ const Router = express.Router();
 
 Router.route("/login-doctor").post(doctorLogin);
 
-Router.route("/update-doctor").patch(checkJwt,updateDoctor)
+Router.route("/update-doctor").patch(checkJwt,updateDoctor);
 
 
 
