@@ -3,7 +3,7 @@ module.exports=(err,req,res,next)=>{
     res.status(err.statusCode ||500).json({
         status:err.status,
         message:err.message,
-        detail:err.stack
+        detail:process.env.NODE_ENV==="development"?err.stack:" "
 
     });
 }

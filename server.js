@@ -21,11 +21,13 @@ app.use(express.json({ limit: "10kb" }));
 // Database connection
 dbConnection();
 
-// Routes with caching applied 
+
 app.use("/api", logoutRoute); 
 app.use("/api/doctor", doctorRoute);
 app.use("/api/patient", patientRouter); 
 app.use("/api/admin", adminRoute); 
+
+
 // Handle invalid routes
 app.all("*", (req, res, next) => {
   next(new errorHandling("URL path not found", 404));
@@ -33,6 +35,7 @@ app.all("*", (req, res, next) => {
 
 // Error handling middleware
 app.use(errorController);
+
 
 // Start server
 app.listen(process.env.PORT || 3000, () => {
