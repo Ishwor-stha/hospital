@@ -2,7 +2,8 @@ const adminModel = require("../models/adminModel");
 const errorHandling = require("../utils/errorHandling")
 const bcrypt = require("bcryptjs")
 const validateEmail = require("../utils/emailValidation")
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const emailValidation = require("../utils/emailValidation");
 
 
 
@@ -37,11 +38,11 @@ module.exports.checkJwt = (req, res, next) => {
 //@desc:Get admin details 
 module.exports.getAdmin = async (req, res, next) => {
     try {
-        if(req.admin.role!="root") return next (new errorHandling("You are not authorized to perform this task",400))
+        if (req.admin.role != "root") return next(new errorHandling("You are not authorized to perform this task", 400))
         // fetch all detalil from database
-        const admins = await adminModel.find({},"name role email -_id")
+        const admins = await adminModel.find({}, "name role email -_id")
         // no details on databse
-        if (!admins || Object.keys(admins).length <= 0) return next(new errorHandling("There is no admin in database",404))
+        if (!admins || Object.keys(admins).length <= 0) return next(new errorHandling("There is no admin in database", 404))
         // send sucess response
         res.status(200).json({
             status: true,
@@ -104,8 +105,8 @@ module.exports.adminLogin = async (req, res, next) => {
         // validate the email
         if (!validateEmail(email)) return next(new errorHandling("Please enter valid email address", 400));
         // search email on database
-        const admin = await adminModel.findOne({ email },"name email password -_id");//fetch only name,email and password -_id(doesnot fetch id)
-        
+        const admin = await adminModel.findOne({ email }, "name email password role");//fetch only name,email and password ,role
+
         // if no email found then send error
         if (!admin || admin.length <= 0) return next(new errorHandling("No admin found by this email", 404));
         //  store the password of database
@@ -159,7 +160,7 @@ module.exports.logoutAdmin = (req, res, next) => {
             message: "Successfully logged out.",
         });
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 };
 
@@ -184,7 +185,7 @@ module.exports.deleteAdmin = async (req, res, next) => {
         res.status(200).json({
             status: true,
             message: `${del.name} deleted sucessfully`
-        })
+        });
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
 
@@ -219,8 +220,8 @@ module.exports.updateAdmin = async (req, res, next) => {
             if (inputFields.includes(key)) {
                 if (key === "password") {
                     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-                    upload["password"] = hashedPassword
-                    req.body.confirmPassword = undefined
+                    upload["password"] = hashedPassword;
+                    req.body.confirmPassword = undefined;
 
                 } else {
                     upload[key] = req.body[key];
@@ -256,15 +257,29 @@ module.exports.updateAdmin = async (req, res, next) => {
 module.exports.updateAdminByRoot = async (req, res, next) => {
     try {
         // if the user is not a root user 
+
         if (req.admin.role !== "root") return next(new errorHandling("You are not authorized ", 403));
         // id from url
-        const id = req.params.id
+        const id = req.params.id;
         // if no id on url
         if (!id) return next(new errorHandling("Id is not given"), 400);
-        // check the details from id
-        const check = await adminModel.findById(id)
-        // if no details found then send error
-        if (!check || Object.keys(check).length <= 0) return next(new errorHandling("No admin found for this admin"), 404)
+        //if email is in the req.body
+        if (req.body.email) {
+            // validate email
+            if (emailValidation(req.body.email)) {
+                // check email on database
+                const check = await adminModel.find({ "email": req.body.email }, "email");
+                // if there is email on data base send error
+                if (Object.keys(check).length > 0) return next(new errorHandling("Email already exists", 404))
+
+            } else {
+                // if email validation fails
+                return next(new errorHandling("Please enter valid email address", 400))
+            }
+        }
+
+
+
         // possible fields key
         const inputFields = ["name", "password", "confirmPassword", "email"];
         const upload = {};

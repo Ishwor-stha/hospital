@@ -12,7 +12,7 @@ module.exports.getDoctors = async (req, res, next) => {
         //allow only if the user is root or admin
         if (req.admin.role === "root" || req.admin.role === "admin") {
             //fetch data
-            const doctors = await doctorModel.find({});
+            const doctors = await doctorModel.find({},"-role -password -_id -__v");//only fetch name email and role field
             // no details
             if (!doctors) return next(new errorHandling("No doctor in database"), 404);
             //send resposnse
@@ -49,7 +49,7 @@ module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
             // if there is phone in qurey
             if (req.query.phone) searching["phone"] = req.query.phone;
             // find detail
-            const details = await doctorModel.find(searching);
+            const details = await doctorModel.find(searching,"-role -password -_id -__v");
             // no details
             if (!details || details <= 0) return next(new errorHandling("No Doctor found", 404));
             // send response
@@ -131,7 +131,7 @@ module.exports.modifyDoctor = async (req, res, next) => {
                 // validate email
                 if (emailValidation(req.body.email)) {
                     // check email on databse
-                    const email = await doctorModel.find({ "email": req.body.email });
+                    const email = await doctorModel.find({ "email": req.body.email },"email");
                     // if there is email on database
 
                     if (Object.keys(email).length > 0) return next(new errorHandling("Email already exists", 400))
@@ -208,6 +208,7 @@ module.exports.deleteDoctor = async (req, res, next) => {
             let id = req.params.id
             // deleting doctor
             let delDoctor = await doctorModel.findByIdAndDelete(id);
+            console.log(delDoctor)
             // if no doctor by this id
             if (!delDoctor || Object.keys(delDoctor).length <= 0) return next(new errorHandling("No doctor found by this id", 404))
             // send response
@@ -242,9 +243,8 @@ module.exports.doctorLogin = async (req, res, next) => {
         // validate email
         if (!emailValidation(email)) return next(new errorHandling("Please enter valid email address", 400))
         // check email on database
-        const doctor = await doctorModel.findOne({ email })
+        const doctor = await doctorModel.findOne({ email },"name password role")
         // if no detais found by the email
-
         if (!doctor || Object.keys(doctor).length <= 0) return next(new errorHandling("No doctor found by this email", 404))
         // store the password from database 
 
@@ -295,7 +295,7 @@ module.exports.updateDoctor = async (req, res, next) => {
         // if no password and confirmPassword on req.body
         if (!req.body.password || !req.body.confirmPassword) return next(new errorHandling("Password or confirmPassword is empty", 400));
         // check the password and confirmPassword
-        if (req.body.password !== req.body.confirmPassword) return next(new errorHandling("Passoword and confirm password doesnot match", 400));
+        if (req.body.password !== req.body.confirmPassword) return next(new errorHandling("Password and confirm password doesnot match", 400));
         // check the length of password
         if (req.body.password.length < 8) return next(new errorHandling("Password length must be atleast 8 character"), 400);
 
@@ -308,10 +308,12 @@ module.exports.updateDoctor = async (req, res, next) => {
         modify["confirmPassword"] = undefined;
         // update the password of the doctor
 
-        const update = await doctorModel.findByIdAndUpdate(id, modify, {
+        const update = await doctorModel.findByIdAndUpdate(id, modify, {   
             new: true, // Return the updated document
-            runValidators: true // Run schema validators
+            runValidators: true, // Run schema validators
+            projection: { name: 1 }
         });
+        
         // if error occurs when updating data ie(no doctor found by the id) then send error
         if (!update || Object.keys(update).length <= 0) return next(new errorHandling("No doctor found by this id", 404));
         // send sucess response
