@@ -37,8 +37,9 @@ module.exports.checkJwt = (req, res, next) => {
 //@desc:Get admin details 
 module.exports.getAdmin = async (req, res, next) => {
     try {
+        if(req.admin.role!="root") return next (new errorHandling("You are not authorized to perform this task",400))
         // fetch all detalil from database
-        const admins = await adminModel.find({})
+        const admins = await adminModel.find({},"name role email -_id")
         // no details on databse
         if (!admins || Object.keys(admins).length <= 0) return next(new errorHandling("There is no admin in database",404))
         // send sucess response
@@ -93,26 +94,26 @@ module.exports.createAdmin = async (req, res, next) => {
 module.exports.adminLogin = async (req, res, next) => {
     try {
         // extract all keys from req.body on array
-        const keys = Object.keys(req.body)
+        const keys = Object.keys(req.body);
         // if the key length is not equal to 2 or the key is not email and password then send error
         if (keys.length !== 2 || !keys.includes('email') || !keys.includes('password')) {
-            return next(new errorHandling("Request body must only contain 'email' and 'password'", 400))
+            return next(new errorHandling("Request body must only contain 'email' and 'password'", 400));
         }
         // destructring the req.body 
         const { email, password } = req.body
         // validate the email
-        if (!validateEmail(email)) return next(new errorHandling("Please enter valid email address", 400))
+        if (!validateEmail(email)) return next(new errorHandling("Please enter valid email address", 400));
         // search email on database
-        const admin = await adminModel.findOne({ email })
+        const admin = await adminModel.findOne({ email },"name email password -_id");//fetch only name,email and password -_id(doesnot fetch id)
+        
         // if no email found then send error
-
-        if (!admin || admin.length <= 0) return next(new errorHandling("No admin found by this email", 404))
+        if (!admin || admin.length <= 0) return next(new errorHandling("No admin found by this email", 404));
         //  store the password of database
-        const dbPassword = admin.password
+        const dbPassword = admin.password;
         // compare database password with user password
-        const isvalid = await bcrypt.compare(password, dbPassword)
+        const isvalid = await bcrypt.compare(password, dbPassword);
         // if password is not valid then throw error
-        if (!isvalid) return next(new errorHandling("Password is incorrect", 400))
+        if (!isvalid) return next(new errorHandling("Password is incorrect", 400));
         // create payload for jwt 
         const payload = {
             adminId: admin._id,
@@ -133,10 +134,10 @@ module.exports.adminLogin = async (req, res, next) => {
         return res.status(200).json({
             status: true,
             message: `Hello ${admin.name}`
-        })
+        });
 
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
 
