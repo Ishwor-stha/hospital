@@ -5,9 +5,6 @@ const validateEmail = require("../utils/emailValidation");
 const jwt = require("jsonwebtoken");
 const emailValidation = require("../utils/emailValidation");
 
-
-
-
 //@desc:check whether a user is login or not 
 module.exports.checkJwt = (req, res, next) => {
     try {
