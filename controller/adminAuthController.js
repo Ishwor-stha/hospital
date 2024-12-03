@@ -40,7 +40,7 @@ module.exports.getAdmin = async (req, res, next) => {
         // fetch all detalil from database
         const admins = await adminModel.find({})
         // no details on databse
-        if (!admins || Object.keys(admins).length <= 0) return next(new errorHandling("There is no admin in database"))
+        if (!admins || Object.keys(admins).length <= 0) return next(new errorHandling("There is no admin in database",404))
         // send sucess response
         res.status(200).json({
             status: true,
