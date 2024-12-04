@@ -15,9 +15,9 @@ const medicalRecordSchema = mongoose.Schema({
     },
 
     // Doctor's Information
-    doctor: {
+    doctor_id: {
         type: String,
-        doctorId: [true, "Doctor id is missing"],
+        required: [true, "Doctor id is missing"],
         ref: "Doctor"
     },
 
@@ -52,8 +52,6 @@ const medicalRecordSchema = mongoose.Schema({
             },
         },
     ],
-
-    // Notes (Optional)
 
 
 
