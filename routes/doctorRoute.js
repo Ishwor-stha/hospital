@@ -11,7 +11,8 @@ Router.route("/login-doctor").post(doctorLogin);
 
 Router.route("/update-doctor").patch(checkJwt,updateDoctor);
 Router.route("/create-report").post(checkJwt,checkingPatientAndData,createReport);
-Router.route("/update-report").patch(checkJwt,checkingPatientAndData,updateReport)
+Router.route("/update-report").patch(checkJwt,checkingPatientAndData,updateReport);
+
 
 
 

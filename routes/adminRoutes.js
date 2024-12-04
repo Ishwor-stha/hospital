@@ -1,5 +1,6 @@
 const { getAdmin,createAdmin,adminLogin,checkJwt,logoutAdmin ,deleteAdmin,updateAdmin,updateAdminByRoot} = require("../controller/adminAuthController");
 const{createDoctor,modifyDoctor,deleteDoctor,getDoctors,getDoctorByPhoneOrName}=require("../controller/doctorController");
+const{deleteMedicalReport}=require("../controller/medicalController");
 
 
 const Router=require("express").Router();
@@ -27,6 +28,8 @@ Router.route("/create-doctor").post(checkJwt,createDoctor);
 Router.route("/update-doctor/:id").patch(checkJwt,modifyDoctor);
 
 Router.route("/delete-doctor/:id").delete(checkJwt,deleteDoctor);
+
+Router.route("/delete-medical-report").delete(checkJwt,deleteMedicalReport)
 
 
 

@@ -107,3 +107,22 @@ module.exports.updateReport = async (req, res, next) => {
 
 
 //deletereport
+module.exports.deleteMedicalReport=async (req,res,next)=>{
+    try {
+        if(req.admin.role==="root" || req.admin.role==="admin"){
+            const {medicalId}=req.query;
+            if(!medicalId)return next(new errorHandling("No medical id is given",400));
+            const del=await medicalModel.findByIdAndDelete(medicalId);
+            if(!del)return next (new errorHandling("Cannot delete medical report"),400);
+            res.status(200).json({
+                status:true,
+                message:"Medical report deleted sucessfully "
+            });
+    
+        }else{
+            return next(new errorHandling("You donot have enough permission to delete a medical record",400));
+        }
+    } catch (error) {
+        return next(new errorHandling(error.message,error.statusCode||500));
+    }
+}
