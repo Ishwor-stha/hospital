@@ -9,11 +9,11 @@ module.exports.checkingPatientAndData = async (req, res, next) => {
         if (req.admin.role !== "doctor") {
             return next(new errorHandling("You don't have enough permission to create a medical report", 400));
         }
-//if the keys on req.body object is zero then throw error 
+        //if the keys on req.body object is zero then throw error 
         if (Object.keys(req.body).length === 0) {
             return next(new errorHandling("Empty body", 404));
         }
-// if the req.originalUrl path matches 
+        // if the req.originalUrl path matches 
         if (req.originalUrl.split("?")[0] === "/api/doctor/create-report") {
             // destructuromg patientId
             const { patientId } = req.query;
@@ -30,7 +30,7 @@ module.exports.checkingPatientAndData = async (req, res, next) => {
             // store the patient object at req.patient object for the use of next controller
             req.patient = patient;
         }
-// if the req.originalUrl matches the url
+        // if the req.originalUrl matches the url
         if (req.originalUrl.split("?")[0] === "/api/doctor/update-report") {
             // destructrue the medical id
             const { medicalId } = req.query;
@@ -45,7 +45,7 @@ module.exports.checkingPatientAndData = async (req, res, next) => {
                 return next(new errorHandling("No medical report found by this ID", 404));
             }
         }
-// go to the next controller
+        // go to the next controller
         next();
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
@@ -79,7 +79,7 @@ module.exports.createReport = async (req, res, next) => {
         if (!save) {
             return next(new errorHandling("Cannot create medical record", 400));
         }
-// send sucess message
+        // send sucess message
         res.status(200).json({
             status: true,
             message: `${req.patient.name}'s medical report created successfully`
@@ -112,7 +112,7 @@ module.exports.updateReport = async (req, res, next) => {
         if (!save) {
             return next(new errorHandling("Cannot update medical record", 400));
         }
-// send sucess response
+        // send sucess response
         res.status(200).json({
             status: true,
             message: "Medical report updated successfully"
@@ -127,29 +127,29 @@ module.exports.updateReport = async (req, res, next) => {
 //@method:DELETE
 // @endpoint:localhost:3000:/api/admin/delete-medical-report?medicalId=******
 // @desc:controller to delete  medical report by root or doctor
-module.exports.deleteMedicalReport=async (req,res,next)=>{
+module.exports.deleteMedicalReport = async (req, res, next) => {
     try {
         // if user is root or admin then allow 
-        if(req.admin.role==="root" || req.admin.role==="admin"){
+        if (req.admin.role === "root" || req.admin.role === "admin") {
             // destructruring the medicalId from req.body object
-            const {medicalId}=req.query;
+            const { medicalId } = req.query;
             // if there is no medicalId in the req.query object then throw error 
-            if(!medicalId)return next(new errorHandling("No medical id is given",400));
+            if (!medicalId) return next(new errorHandling("No medical id is given", 400));
             // delete the medical record
-            const del=await medicalModel.findByIdAndDelete(medicalId);
+            const del = await medicalModel.findByIdAndDelete(medicalId);
             // if the deletiion fails then throw error 
-            if(!del)return next (new errorHandling("Cannot delete medical report"),400);
+            if (!del) return next(new errorHandling("Cannot delete medical report"), 400);
             // send sucess resposne
             res.status(200).json({
-                status:true,
-                message:"Medical report deleted sucessfully "
+                status: true,
+                message: "Medical report deleted sucessfully "
             });
-    
-        }else{
+
+        } else {
             // if user is not root or admin then throw error 
-            return next(new errorHandling("You donot have enough permission to delete a medical record",400));
+            return next(new errorHandling("You donot have enough permission to delete a medical record", 400));
         }
     } catch (error) {
-        return next(new errorHandling(error.message,error.statusCode||500));
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
