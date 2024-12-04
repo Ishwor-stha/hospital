@@ -2,12 +2,13 @@ const medicalModel = require("../models/medicalRecord");
 const patientModel = require("../models/patientMode");
 const errorHandling = require("../utils//errorHandling");
 
+//check and validate
 module.exports.checkingPatientAndData = async (req, res, next) => {
     try {
         if (req.admin.role !== "doctor") {
             return next(new errorHandling("You don't have enough permission to create a medical report", 400));
         }
-        
+
         if (Object.keys(req.body).length === 0) {
             return next(new errorHandling("Empty body", 404));
         }
