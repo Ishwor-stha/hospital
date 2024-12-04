@@ -8,6 +8,7 @@ const logoutRoute = require("./routes/logOutRoute");
 const adminRoute = require("./routes/adminRoutes");
 const errorHandling = require("./utils/errorHandling");
 const cookieParser = require("cookie-parser");
+const uncaughtError=require("./utils/uncaughtError")
 
 const app = express();
 dotenv.config();
@@ -38,7 +39,9 @@ app.use(errorController);
 
 
 // Start server
-app.listen(process.env.PORT || 3000, () => {
+const server=app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
   console.log(`App is running in ${process.env.NODE_ENV} mode`);
 });
+
+uncaughtError(server)

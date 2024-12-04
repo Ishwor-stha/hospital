@@ -1,6 +1,7 @@
 const express = require("express");
 const {doctorLogin,updateDoctor}= require("../controller/doctorController.js");
 const { checkJwt } = require("../controller/adminAuthController.js");
+const {checkingPatientAndData,createReport}=require("../controller/medicalController.js")
 
 
 // Create the router and define the route
@@ -9,6 +10,8 @@ const Router = express.Router();
 Router.route("/login-doctor").post(doctorLogin);
 
 Router.route("/update-doctor").patch(checkJwt,updateDoctor);
+Router.route("/create-report").post(checkJwt,checkingPatientAndData,createReport);
+
 
 
 
