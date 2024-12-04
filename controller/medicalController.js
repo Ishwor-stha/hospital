@@ -2,7 +2,7 @@ const medicalModel = require("../models/medicalRecord");
 const patientModel = require("../models/patientMode");
 const errorHandling = require("../utils//errorHandling");
 
-//check and validate
+//@desc validation
 module.exports.checkingPatientAndData = async (req, res, next) => {
     try {
         if (req.admin.role !== "doctor") {
@@ -43,7 +43,9 @@ module.exports.checkingPatientAndData = async (req, res, next) => {
 };
 
 
-//create report '
+//@method:POST
+// @endpoint:localhost:3000:/api/doctor/create-report?patientId=****
+// @desc:controller to create  medical report by doctor
 module.exports.createReport = async (req, res, next) => {
     try {
         const allowedFields = ["diagnosis", "treatment", "medications"];
@@ -76,7 +78,9 @@ module.exports.createReport = async (req, res, next) => {
 };
 
 
-//update report
+//@method:PATCH
+// @endpoint:localhost:3000:/api/doctor/update-report?medicalId=****
+// @desc:controller to update  medical report by doctor
 module.exports.updateReport = async (req, res, next) => {
     try {
         const allowedFields = ["diagnosis", "treatment", "medications"];
@@ -106,7 +110,9 @@ module.exports.updateReport = async (req, res, next) => {
 
 
 
-//deletereport
+//@method:DELETE
+// @endpoint:localhost:3000:/api/admin/delete-medical-report?medicalId=******
+// @desc:controller to delete  medical report by root or doctor
 module.exports.deleteMedicalReport=async (req,res,next)=>{
     try {
         if(req.admin.role==="root" || req.admin.role==="admin"){
