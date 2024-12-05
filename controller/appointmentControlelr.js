@@ -1,6 +1,8 @@
 const appointmentModel = require("../models/appointmentModel");
 const errorHandling = require("../utils/errorHandling");
 const doctorModel = require("../models/doctorModel");
+const sendEmail = require("../utils/sendMail"); // Adjust the path based on your project structure
+
 
 
 
@@ -96,13 +98,19 @@ module.exports.approveAppointment = async (req, res, next) => {
         );
 
         // Notify the patient 
-        const message = `Your appointment with Dr.${doctor.name} has been approved. Time: ${time}, Date: ${date}`;
+        const message = `Your appointment with Dr.${doctor.name} has been approved. \nTime: ${time} \n Date: ${date}`;
+        const subject = "Appointment Approval Notification";
+        const email = updatedAppointment.patient_email;
+        const name = updatedAppointment.patient_name;
+
+        // Send email notification
+        await sendEmail(next, message, subject, email, name);
         //email
 
         // send sucess  response
         res.status(200).json({
             status: true,
-            message: "Appointment approved successfully",
+            message: "Appointment approved successfully and email is send to the patient",
 
         });
     } catch (error) {
@@ -114,6 +122,7 @@ module.exports.approveAppointment = async (req, res, next) => {
 //@endpoint:localhost:3000/api/doctor/reject-appointment
 //@method:PATCH
 //@desc:controller to reject appointment by the doctor 
+
 module.exports.rejectAppointment = async (req, res, next) => {
     try {
         // Check if the user is a doctor
@@ -121,21 +130,25 @@ module.exports.rejectAppointment = async (req, res, next) => {
             return next(new errorHandling("You do not have permission to reject appointments", 403));
         }
 
-        // if no appointmentId is given on the query then send error
+        // If no appointmentId is given on the query, send an error
         if (!req.query.appointmentId) {
             return next(new errorHandling("Appointment ID is missing", 400));
         }
 
-        // destructuring the reason key from req.body
+        // Destructure the reason key from req.body
         const { reason } = req.body;
-        // if no reason is given on req.body then send error
+
+        // If no reason is given in req.body, send an error
         if (!reason) {
             return next(new errorHandling("Rejection reason is required", 400));
         }
+        const checkDoctor = await doctorModel.findById(req.admin.adminId, "name");
+        if (!checkDoctor) return next(new errorHandling("No doctor is found by this id", 404));
 
         // Find the appointment
         const appointment = await appointmentModel.findById(req.query.appointmentId);
-        // if no appointment is on the database then send error
+
+        // If no appointment is found in the database, send an error
         if (!appointment) {
             return next(new errorHandling("Appointment not found", 404));
         }
@@ -151,24 +164,37 @@ module.exports.rejectAppointment = async (req, res, next) => {
             },
             { new: true }
         );
-        // if update appointment fails
+
+        // If updating the appointment fails
         if (!updatedAppointment) {
             return next(new errorHandling("Failed to reject the appointment", 400));
         }
 
+        // Prepare the email details
+        const message = `Your appointment with Dr.${checkDoctor.name} has been rejected. Reason: ${reason}`;
+        const subject = "Appointment Approval Notification";
+        const email = updatedAppointment.patient_email;
+        const name = updatedAppointment.patient_name;
 
-        const message = `Your appointment with Dr.${req.admin.name} has been rejected. Reason: ${reason}`;
-        //email
+        // Send email notification
+        await sendEmail(next, message, subject, email, name);
 
-
-        // send sucess response
+        // Send success response
         res.status(200).json({
             status: true,
-            message: "Appointment rejected successfully",
+            message: "Appointment rejected successfully and email is send to patient",
             appointment: updatedAppointment,
         });
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 };
+
+
+// delete by admin
+
+// view by admin
+
+
+
 
