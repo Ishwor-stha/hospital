@@ -7,7 +7,7 @@ const adminSchema = mongoose.Schema({
         type: String,
         required: [true, "Name is required"],
         minlength: [5, "The length of name must be at least 5 letters"],
-        trim:true
+        trim: true
     },
     role: {
         type: String,
@@ -18,7 +18,7 @@ const adminSchema = mongoose.Schema({
         type: String,
         required: [true, "Email Field is Missing"],
         lowercase: true,
-        trim:true,
+        trim: true,
         validate: {
             validator: function (email) {
                 return validateEmail(email); // Custom email validation function
@@ -48,7 +48,7 @@ const adminSchema = mongoose.Schema({
 adminSchema.pre("save", async function (next) {
     // Check if the email already exists in the database
     const existingAdmin = await mongoose.model("admin").findOne({ email: this.email });
-    
+
     if (existingAdmin) {
         const error = new Error("Email already exists");
         return next(error); // Reject save if email exists
@@ -60,7 +60,7 @@ adminSchema.pre("save", async function (next) {
         this.confirmPassword = undefined; // Remove confirmPassword after hashing
     }
 
-    next(); 
+    next();
 });
 
 // Create and export the admin model

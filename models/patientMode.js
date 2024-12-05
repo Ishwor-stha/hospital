@@ -8,11 +8,11 @@ const patientSchema = mongoose.Schema({
         required: [true, "Patient Name is Required"],
         maxlength: [50, "Patient name must not exceed 50 characters"]
     },
-    
+
     // Patient's Unique ID (e.g., generated from timestamp)
     patient_id: {
         type: String,
-        default: function() {
+        default: function () {
             return `P${Date.now()}`;  // Generate a unique ID based on the current timestamp
         },
         unique: true,  // Ensure this is unique
@@ -49,8 +49,8 @@ const patientSchema = mongoose.Schema({
 
     // Address Details
     address: {
-        type:String,
-        required:[true,"Address is missing"]
+        type: String,
+        required: [true, "Address is missing"]
     },
 
     // Emergency Contact Information
@@ -58,7 +58,7 @@ const patientSchema = mongoose.Schema({
         name: {
             type: String,
             required: [true, "Emergency contact name is required"],
-        trim: true
+            trim: true
 
         },
         relationship: {
@@ -78,8 +78,8 @@ const patientSchema = mongoose.Schema({
         default: Date.now
     },
 
-  
-   
+
+
 
 });
 

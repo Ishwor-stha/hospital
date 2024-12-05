@@ -56,7 +56,7 @@ const doctorSchema = mongoose.Schema({
         trim: true,
 
         validate: {
-            validator:function(email){
+            validator: function (email) {
                 return emailValidation(email);
             },
             message: "Please enter a valid email address",
@@ -96,8 +96,8 @@ const doctorSchema = mongoose.Schema({
 // Middleware: Pre-save Hook
 doctorSchema.pre("save", async function (next) {
     try {
-        
-     
+
+
         // Hash password if modified
         if (this.isModified("password")) {
             this.password = await bcrypt.hash(this.password, 10);
