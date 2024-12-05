@@ -5,7 +5,7 @@ module.exports = async (next, message, subject, email, name) => {
     // MailerSend API endpoint
     const url = 'https://api.mailersend.com/v1/email';
 
-    // Your API key
+    //  API key
     const API_KEY = process.env.API_KEY;
 
     // Email details
