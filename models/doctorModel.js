@@ -18,6 +18,8 @@ const doctorSchema = mongoose.Schema({
         type: String,
         required: [true, "Doctor's name is required"],
         maxlength: [50, "Doctor's name must not exceed 50 characters"],
+        trim: true
+
     },
 
     // Department
@@ -51,6 +53,8 @@ const doctorSchema = mongoose.Schema({
         required: [true, "Email is required"],
         unique: true,
         lowercase: true,
+        trim: true,
+
         validate: {
             validator:function(email){
                 return emailValidation(email);

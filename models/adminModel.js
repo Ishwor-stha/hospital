@@ -7,6 +7,7 @@ const adminSchema = mongoose.Schema({
         type: String,
         required: [true, "Name is required"],
         minlength: [5, "The length of name must be at least 5 letters"],
+        trim:true
     },
     role: {
         type: String,
@@ -17,6 +18,7 @@ const adminSchema = mongoose.Schema({
         type: String,
         required: [true, "Email Field is Missing"],
         lowercase: true,
+        trim:true,
         validate: {
             validator: function (email) {
                 return validateEmail(email); // Custom email validation function

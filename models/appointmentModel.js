@@ -12,6 +12,8 @@ const appointmentSchema = new mongoose.Schema({
         type: String,
         required: [true, "Patient email is required"],
         lowercase: true,
+        trim: true,
+
         validate: {
             validator: function (value) {
                 return emailValidation(value)

@@ -42,7 +42,9 @@ const patientSchema = mongoose.Schema({
         type: String,
         unique: true,  // Ensure email is unique
         match: [/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/, "Please enter a valid email address"],  // Basic regex for email
-        lowercase: true
+        lowercase: true,
+        trim: true
+
     },
 
     // Address Details
@@ -55,7 +57,9 @@ const patientSchema = mongoose.Schema({
     emergency_contact: {
         name: {
             type: String,
-            required: [true, "Emergency contact name is required"]
+            required: [true, "Emergency contact name is required"],
+        trim: true
+
         },
         relationship: {
             type: String,
