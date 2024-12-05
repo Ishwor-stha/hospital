@@ -130,7 +130,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
         }
 
 
-        const message = `Your appointment with Dr. ${req.admin.name} has been rejected. Reason: ${reason}`;
+        const message = `Your appointment with Dr.${req.admin.name} has been rejected. Reason: ${reason}`;
 
 
         // Respond to the client
