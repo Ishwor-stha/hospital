@@ -1,5 +1,5 @@
 const Router=require("express").Router();
-const {createAppointment,approveAppointment}=require("../controller/appointmentControlelr");
+const {createAppointment}=require("../controller/appointmentControlelr");
 
 Router.route("/create-appointment").post(createAppointment);
 
