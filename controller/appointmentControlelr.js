@@ -1,7 +1,7 @@
 const appointmentModel = require("../models/appointmentModel");
 const errorHandling = require("../utils/errorHandling");
 const doctorModel = require("../models/doctorModel");
-const sendEmail = require("../utils/sendMail"); // Adjust the path based on your project structure
+const sendEmail = require("../utils/sendMail"); 
 
 
 
