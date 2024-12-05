@@ -19,7 +19,7 @@ Router.route("/update-admin").patch(checkJwt,updateAdmin);
 
 Router.route("/update-admin-root/:id").patch(checkJwt,updateAdminByRoot);
 
-Router.route("/get-doctors").get(checkJwt,getDoctors);
+// Router.route("/get-doctors").get(checkJwt,getDoctors);
 
 Router.route("/get-doctorByID").get(checkJwt,getDoctorByPhoneOrName);
 

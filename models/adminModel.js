@@ -16,6 +16,7 @@ const adminSchema = mongoose.Schema({
     email: {
         type: String,
         required: [true, "Email Field is Missing"],
+        lowercase: true,
         validate: {
             validator: function (email) {
                 return validateEmail(email); // Custom email validation function

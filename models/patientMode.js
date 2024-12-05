@@ -41,7 +41,8 @@ const patientSchema = mongoose.Schema({
     email: {
         type: String,
         unique: true,  // Ensure email is unique
-        match: [/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/, "Please enter a valid email address"]  // Basic regex for email
+        match: [/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/, "Please enter a valid email address"],  // Basic regex for email
+        lowercase: true
     },
 
     // Address Details
