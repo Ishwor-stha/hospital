@@ -25,7 +25,7 @@ const adminSchema = mongoose.Schema({
             },
             message: "Not a valid email", // Error message if validation fails
         },
-        unique: true, // Ensures uniqueness at the database level
+        unique: true, // Ensures uniqueness 
     },
     password: {
         type: String,
@@ -63,7 +63,7 @@ adminSchema.pre("save", async function (next) {
     next();
 });
 
-// Create and export the admin model
+
 const adminModel = mongoose.model("admin", adminSchema);
 
 module.exports = adminModel;

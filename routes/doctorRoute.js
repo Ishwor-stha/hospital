@@ -22,12 +22,5 @@ Router.route("/approve-appointment").patch(checkJwt,approveAppointment);
 Router.route("/reject-appointment").patch(checkJwt,rejectAppointment);
 
 
-// router.route("/").post(createPatientRecord);  // Define the GET route
-
-
-
-
-
-
-// Export the router using CommonJS syntax
+// router.route("/").post(createPatientRecord);
 module.exports = Router;
