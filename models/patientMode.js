@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require("bcryptjs")
 
 // Define the Patient Schema
 const patientSchema = mongoose.Schema({
@@ -71,6 +72,26 @@ const patientSchema = mongoose.Schema({
             match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"]
         }
     },
+    password: {
+        type: String,
+        minlength: [8, "Minimum password length must be 8 characters"],
+        required: [true, "Password field is missing"],
+    },
+    confirmPassword: {
+        type: String,
+        required: [true, "Confirm password field is missing"],
+        validate: {
+            validator: function (confirmPassword) {
+                return confirmPassword === this.password;
+            },
+            message: "Password and Confirm password must be the same",
+        }
+    },
+    role: {
+        type: String,
+        enum: "patient",
+        default: "patient"
+    },
 
     // Date of Registration (automatically generated)
     registration_date: {
@@ -82,8 +103,25 @@ const patientSchema = mongoose.Schema({
 
 
 });
+patientSchema.pre("save", async function (next) {
+    // Check if the email already exists in the database
+    const existingPatient = await mongoose.model("Patient").findOne({ email: this.email });
+
+    if (existingPatient) {
+        const error = new Error("Email already exists");
+        return next(error); // Reject save if email exists
+    }
+
+    // If the password is modified, hash it before saving
+    if (this.isModified("password")) {
+        this.password = bcrypt.hashSync(this.password, 10);
+        this.confirmPassword = undefined; // Remove confirmPassword after hashing
+    }
+
+    next();
+});
 
 // Create and export the model
-const Patient = mongoose.model('Patients', patientSchema);
+const Patient = mongoose.model('Patient', patientSchema);
 
 module.exports = Patient;

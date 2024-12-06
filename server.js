@@ -9,7 +9,6 @@ const adminRoute = require("./routes/adminRoutes");
 const errorHandling = require("./utils/errorHandling");
 const cookieParser = require("cookie-parser");
 const uncaughtError=require("./utils/uncaughtError")
-const appointmentRoute=require("./routes/appointmentRoute");
 
 const app = express();
 dotenv.config();
@@ -25,7 +24,7 @@ dbConnection();
 
 
 app.use("/api", logoutRoute); 
-app.use("/api/appointment",appointmentRoute);
+
 app.use("/api/doctor", doctorRoute);
 app.use("/api/patient", patientRouter); 
 app.use("/api/admin", adminRoute); 

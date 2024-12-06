@@ -2,6 +2,8 @@ const patientModel = require("../models/patientMode");
 const emailValidation = require("../utils/emailValidation");
 const errorHandling = require("../utils/errorHandling");
 const patientIdValidation = require("../utils/patientIdValidation");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken")
 
 //@endPoint:localhost:3000/api/patient/get-patients
 //@desc:controller to get all patient 
@@ -60,14 +62,12 @@ module.exports.getPatientByPatientId = async (req, res, next) => {
 
 
 
-// @endpoint:localhost:3000/api/patient/post-patients
+// @endpoint:localhost:3000/api/patient/create-patients
 //@desc:controller to post   patient 
 //@method:POST
 
 module.exports.postPatient = async (req, res, next) => {
     try {
-        // if user is doctor then throw error(only root and admin user can create patient profile)
-        if (req.admin.role === "doctor") return next(new errorHandling("Doctor not allowed to create a new patient", 404));
         // no body
         if (!req.body) return next(new errorHandling("Empty fields", 404));
         // if email is provided
@@ -80,7 +80,7 @@ module.exports.postPatient = async (req, res, next) => {
         }
 
         // list all possible keys
-        let patientDetails = ["name", "dob", "gender", "phone", "email", "address", "emergency_contact"];
+        let patientDetails = ["name", "dob", "gender", "phone", "email", "address", "emergency_contact", "password", "confirmPassword"];
         let toBeUpload = {};
         // iterate through req.body
         for (key in req.body) {
@@ -104,23 +104,87 @@ module.exports.postPatient = async (req, res, next) => {
 
 }
 
+module.exports.patientLogin = async (req, res, next) => {
+    try {
+        // extract all keys from req.body on array
+        const keys = Object.keys(req.body);
+        // if the key length is not equal to 2 or the key is not email and password then send error
+        if (keys.length !== 2 || !keys.includes('email') || !keys.includes('password')) {
+            return next(new errorHandling("Request body must only contain 'email' and 'password'", 400));
+        }
+        // destructring the req.body 
+        const { email, password } = req.body;
+        // validate the email
+        if (!emailValidation(email)) return next(new errorHandling("Please enter valid email address", 400));
+        // search email on database
+        const patient = await patientModel.findOne({ email }, "name email password role");//fetch only name,email and password ,role
+
+        // if no email found then send error
+        if (!patient || Object.keys(patient).length <= 0) return next(new errorHandling("No Patient found by this email", 404));
+        //  store the password of database
+        const dbPassword = patient.password;
+        // compare database password with user password
+        const isvalid = await bcrypt.compare(password, dbPassword);
+        // if password is not valid then throw error
+        if (!isvalid) return next(new errorHandling("Password is incorrect", 400));
+        // create payload for jwt 
+        const payload = {
+            adminId: patient._id,
+            role: patient.role,
+        };
+        // create token
+        const token = jwt.sign(payload, process.env.jwtSecretKey, { expiresIn: '1h' });
+        // send cookie to the browser
+        res.cookie("auth_token", token, {
+            httpOnly: true, // Makes the cookie accessible only by the server (prevents JavaScript access)
+            secure: process.env.NODE_ENV === "production", // Ensures cookies are only sent over HTTPS in production
+            expires: new Date(Date.now() + 3600000), // Cookie expires in 1 hour
+            sameSite: "Strict" // Restricts the cookie to same-site requests (prevents CSRF attacks)
+        });
+
+        // send sucess message
+
+        return res.status(200).json({
+            status: true,
+            message: `Hello ${patient.name}`
+        });
+
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500));
+    }
+}
+
+
 // @endpoint localhost:3000/api/patient/update-patient/:id
 //@desc:controller to update patient 
 //@method:PATCH
 module.exports.updatePatient = async (req, res, next) => {
     try {
         // if the user is doctor then throw error (only admin and root user can modify patients details)
-        if (req.admin.role === "doctor") return next(new errorHandling("Doctor not allowed to update the details of patient", 404));
-        if (!req.params.id || Object.keys(req.params.id).length <= 0) return next(new errorHandling("Id is missing on parameter", 400));
-        const id = req.params.id;
+        if (req.admin.role !== "patient") return next(new errorHandling("You donot have enough permission to update the details of patient", 404));
+        if (!req.admin.adminId) return next(new errorHandling("Patient Id is missing ", 400));
+        const id = req.admin.adminId;
 
 
         // Ensure that request body is not empty
         if (Object.keys(req.body).length === 0) {
             return next(new errorHandling("No patient detail is given to update", 400));
         }
+        if (req.body.email) {
+            // validate email
+            if (emailValidation(req.body.email)) {
+                // check email on database
+                const check = await patientModel.find({ "email": req.body.email }, "email");
+                // if there is email on data base send error
+                if (Object.keys(check).length > 0) return next(new errorHandling("Email already exists", 404));
+
+            } else {
+                // if email validation fails
+                return next(new errorHandling("Please enter valid email address", 400));
+            }
+        }
         // possible keys
-        let patientDetails = ["name", "dob", "gender", "phone", "email", "address", "emergency_contact"];
+        let patientDetails = ["name", "dob", "gender", "phone", "email", "address", "emergency_contact", "password", "confirmPassword"];
         let updatedData = {};
         let updateEmergency = {};
 
@@ -163,6 +227,16 @@ module.exports.updatePatient = async (req, res, next) => {
                     updatedData[key] = req.body[key];
                 }
             }
+        }
+        if (req.body.password) {
+            if (req.body.password != req.body.confirmPassword) {
+                return next(new errorHandling("Enter valid password", 404));
+
+            } else {
+                updatedData["password"] = bcrypt.hashSync(req.body.password, 10)
+                updatedData["confirmPassword"] = undefined
+            }
+
         }
 
         // Update the patient document in the database

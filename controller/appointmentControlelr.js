@@ -12,6 +12,7 @@ const { approveMessage, rejectMessage } = require("../utils/message")
 //@desc:controller to create appointment by the patients 
 module.exports.createAppointment = async (req, res, next) => {
     try {
+        if (req.admin.role !== "patient") return next(new errorHandling("Only patient are allowed to book appointment", 404));
         // if body is empty then send error
         if (Object.keys(req.body).length === 0) return next(new errorHandling("Empty body", 400));
         // if no doctorId is given in query
@@ -28,6 +29,7 @@ module.exports.createAppointment = async (req, res, next) => {
         }
         // insert doctor id on update object
         update["doctor_id"] = req.query.doctorId;
+        update["patient_id"] = req.admin.adminId;
 
         // Check for duplicate appointments
         const existingAppointment = await appointmentModel.findOne({
@@ -219,7 +221,7 @@ module.exports.viewAppointments = async (req, res, next) => {
     try {
         if (req.admin.role === "root" || req.admin.role === "admin") {
             const viewAppointments = await appointmentModel.find({}, "-id -__v");
-            if (!viewAppointments || Object.keys(viewAppointments).length<=0) return next(new errorHandling("Donot have appointment on database",400));
+            if (!viewAppointments || Object.keys(viewAppointments).length <= 0) return next(new errorHandling("Donot have appointment on database", 400));
             res.status(200).json({
                 status: true,
                 appointments: viewAppointments
@@ -232,21 +234,39 @@ module.exports.viewAppointments = async (req, res, next) => {
     }
 }
 
-module.exports.viewDoctorAppointment=async (req,res,next)=>{
+module.exports.viewDoctorAppointment = async (req, res, next) => {
     try {
-        if(req.admin.role!=="doctor")return next(new errorHandling("You donot have enough permission to view ",400));
-        const doctorId=req.admin.adminId;
-        if(!doctorId)return next(new errorHandling("No doctor id is given ",400));
-        const view=await appointmentModel.find({"doctor_id":doctorId},"-doctor_id -__v");
-        if(!view ||Object.keys(view).length<=0)return next(new errorHandling("No appointment found",404));
+        if (req.admin.role !== "doctor") return next(new errorHandling("You donot have enough permission to view ", 400));
+        const doctorId = req.admin.adminId;
+        if (!doctorId) return next(new errorHandling("No doctor id is given ", 400));
+        const view = await appointmentModel.find({ "doctor_id": doctorId }, "-doctor_id -__v");
+        if (!view || Object.keys(view).length <= 0) return next(new errorHandling("No appointment found", 404));
         res.status(200).json({
-            status:true,
-            appointment:view
+            status: true,
+            appointment: view
 
         })
     } catch (error) {
-        return next(new errorHandling(error.message,error.statusCode||500));
-        
+        return next(new errorHandling(error.message, error.statusCode || 500));
+
+    }
+}
+
+module.exports.viewPatientAppointment = async (req, res, next) => {
+    try {
+        if (req.admin.role !== "patient") return next(new errorHandling("You donot have enough permission to view ", 400));
+        const patientId = req.admin.adminId;
+        if (!patientId) return next(new errorHandling("No patient id is given ", 400));
+        const view = await appointmentModel.find({ "patient_id": patientId }, "-patient_id -__v");
+        if (!view || Object.keys(view).length <= 0) return next(new errorHandling("No appointment found", 404));
+        res.status(200).json({
+            status: true,
+            appointment: view
+
+        })
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500));
+
     }
 }
 
