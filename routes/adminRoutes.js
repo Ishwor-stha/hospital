@@ -1,4 +1,4 @@
-const { getAdmin,createAdmin,adminLogin,checkJwt,logoutAdmin ,deleteAdmin,updateAdmin,updateAdminByRoot} = require("../controller/adminAuthController");
+const { getAdmin,createAdmin,adminLogin,checkJwt,logoutAdmin ,deleteAdmin,updateAdmin,updateAdminByRoot,forgetPassword} = require("../controller/adminAuthController");
 const{createDoctor,modifyDoctor,deleteDoctor,getDoctors,getDoctorByPhoneOrName}=require("../controller/doctorController");
 const{deleteMedicalReport}=require("../controller/medicalController");
 const{deleteAppointment,viewAppointments}=require("../controller/appointmentControlelr");
@@ -35,6 +35,9 @@ Router.route("/delete-medical-report").delete(checkJwt,deleteMedicalReport);
 Router.route("/delete-appointment").delete(checkJwt,deleteAppointment);
 
 Router.route("/view-appointments").get(checkJwt,viewAppointments);
+
+Router.route("/forget-password").patch(forgetPassword)
+// Router.route("/reset-password/:code").patch()
 
 
 

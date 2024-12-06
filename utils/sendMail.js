@@ -3,7 +3,7 @@ const errorHandling = require("../utils/errorHandling");
 
 module.exports = async (next, message, subject, email, name) => {
     // MailerSend API endpoint
-    const url = 'https://api.mailersend.com/v1/email';
+    const url = process.env.mailer_send_api_endpoint;
 
     //  API key
     const API_KEY = process.env.API_KEY;

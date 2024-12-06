@@ -1,5 +1,5 @@
 const express = require("express");
-const {doctorLogin,updateDoctor,getDoctors}= require("../controller/doctorController.js");
+const {doctorLogin,updateDoctor,getDoctors,forgetPassword}= require("../controller/doctorController.js");
 const { checkJwt } = require("../controller/adminAuthController.js");
 const {checkingPatientAndData,createReport,updateReport}=require("../controller/medicalController.js")
 const{approveAppointment,rejectAppointment,viewDoctorAppointment}=require("../controller/appointmentControlelr.js")
@@ -8,6 +8,10 @@ const{approveAppointment,rejectAppointment,viewDoctorAppointment}=require("../co
 const Router = express.Router();
 
 Router.route("/login-doctor").post(doctorLogin);
+
+Router.route("/forget-password/").patch(forgetPassword);
+
+// Router.route("/reset-password/:code").patch(reset-password)
 
 Router.route("/update-doctor").patch(checkJwt,updateDoctor);
 

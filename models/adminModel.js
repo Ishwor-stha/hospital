@@ -42,6 +42,12 @@ const adminSchema = mongoose.Schema({
             message: "Password and Confirm password must be the same",
         },
     },
+    code:{
+        type:String
+    },
+    code_expire:{
+        type:String
+    }
 });
 
 // Pre-save hook for checking duplicate email and hashing password

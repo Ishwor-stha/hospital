@@ -98,7 +98,12 @@ const patientSchema = mongoose.Schema({
         type: Date,
         default: Date.now
     },
-
+    code: {
+        type: String
+    },
+    code_expire: {
+        type: String
+    }
 
 
 

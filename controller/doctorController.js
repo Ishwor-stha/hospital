@@ -3,6 +3,9 @@ const emailValidation = require("../utils/emailValidation");
 const errorHandling = require("../utils/errorHandling")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken");
+const crypto=require("crypto")
+const {forgotMessage}=require("../utils/forgetMessage");
+const sendMail=require("../utils/sendMail")
 
 // @method:GET 
 // @endpoint:localhost:3000/api/admin/get-doctors
@@ -319,3 +322,36 @@ module.exports.updateDoctor = async (req, res, next) => {
 
     }
 }
+
+
+
+module.exports.forgetPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) return next(new errorHandling("Enter email", 400));
+        if (!emailValidation(email)) return next(new errorHandling("Enter valid email address", 400));
+        const checkDoctor = await doctorModel.findOne({ email }, "name")
+        if (!checkDoctor || Object.keys(checkDoctor).length <= 0) return next(new errorHandling("No user found by this email", 404));
+        const code = crypto.randomBytes(10).toString("hex"); // Generate a random code
+        const expire = Date.now() + 10 * 60 * 1000; // Current time + 10 minutes in milliseconds
+        const update = await doctorModel.findByIdAndUpdate(checkDoctor._id, {
+            "code": code,
+            "code_expire": expire
+        })
+        if(!update || Object.keys(update).length<=0) return next(new errorHandling("Error while forgetting password please try again later",400));
+        const siteUrl=process.env.forgotUrlDoctor
+        const message=forgotMessage(code,siteUrl)
+        const subject="Forget password reset token"
+        await sendMail(next,message,subject,update.email,update.name);
+
+        res.json({
+            status:true,
+            message:"Password Code is sent to your email account.The code will expire after 10 minutes "
+        })
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500));
+    }
+}
+
+
+// reset-password

@@ -4,6 +4,9 @@ const bcrypt = require("bcryptjs");
 const validateEmail = require("../utils/emailValidation");
 const jwt = require("jsonwebtoken");
 const emailValidation = require("../utils/emailValidation");
+const crypto=require("crypto");
+const sendMail=require("../utils/sendMail")
+const{forgotMessage}=require("../utils/forgetMessage")
 
 //@desc:check whether a user is login or not 
 module.exports.checkJwt = (req, res, next) => {
@@ -320,3 +323,34 @@ module.exports.updateAdminByRoot = async (req, res, next) => {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
+
+
+module.exports.forgetPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) return next(new errorHandling("Enter email", 400));
+        if (!emailValidation(email)) return next(new errorHandling("Enter valid email address", 400));
+        const checkAdmin = await adminModel.findOne({ email }, "name")
+        if (!checkAdmin || Object.keys(checkAdmin).length <= 0) return next(new errorHandling("No user found by this email", 404));
+        const code = crypto.randomBytes(10).toString("hex"); // Generate a random code
+        const expire = Date.now() + 10 * 60 * 1000; // Current time + 10 minutes in milliseconds
+        const update = await adminModel.findByIdAndUpdate(checkAdmin._id, {
+            "code": code,
+            "code_expire": expire
+        })
+        if(!update || Object.keys(update).length<=0) return next(new errorHandling("Error while forgetting password please try again later",400));
+        const siteUrl=process.env.forgotUrlAdmin
+        const message=forgotMessage(code,siteUrl)
+        const subject="Forget password reset token"
+        await sendMail(next,message,subject,update.email,update.name);
+
+        res.json({
+            status:true,
+            message:"Password Code is sent to your email account.The code will expire after 10 minutes "
+        })
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500));
+    }
+}
+
+//reset-password
