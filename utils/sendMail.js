@@ -11,8 +11,8 @@ module.exports = async (next, message, subject, email, name) => {
     // Email details
     const emailData = {
         from: {
-            email: process.env.mailer_send_test_mail,  
-            name: process.env.mail_name               
+            email: process.env.mailer_send_test_mail,
+            name: process.env.mail_name
         },
         to: [
             {
@@ -21,7 +21,7 @@ module.exports = async (next, message, subject, email, name) => {
             }
         ],
         subject: subject,  // Subject of the email
-        text: message      // Body of the email
+        html: message      // Body of the email
     };
 
     // Function to send an email

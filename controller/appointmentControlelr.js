@@ -1,7 +1,8 @@
 const appointmentModel = require("../models/appointmentModel");
 const errorHandling = require("../utils/errorHandling");
 const doctorModel = require("../models/doctorModel");
-const sendEmail = require("../utils/sendMail"); 
+const sendEmail = require("../utils/sendMail");
+const {approveMessage,rejectMessage}=require("../utils/message")
 
 
 
@@ -98,7 +99,7 @@ module.exports.approveAppointment = async (req, res, next) => {
         );
 
         // Notify the patient 
-        const message = `Your appointment with Dr.${doctor.name} has been approved. \nTime: ${time} \n Date: ${date}`;
+        const message =approveMessage(updatedAppointment.patient_name,doctor.name,date,time)
         const subject = "Appointment Approval Notification";
         const email = updatedAppointment.patient_email;
         const name = updatedAppointment.patient_name;
@@ -171,7 +172,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
         }
 
         // Prepare the email details
-        const message = `Your appointment with Dr.${checkDoctor.name} has been rejected. Reason: ${reason}`;
+        const message =rejectMessage(updatedAppointment.patient_name,checkDoctor.name,reason)
         const subject = "Appointment Approval Notification";
         const email = updatedAppointment.patient_email;
         const name = updatedAppointment.patient_name;
@@ -183,7 +184,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
         res.status(200).json({
             status: true,
             message: "Appointment rejected successfully and email is send to patient",
-            appointment: updatedAppointment,
+           
         });
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
