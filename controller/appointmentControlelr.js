@@ -2,7 +2,7 @@ const appointmentModel = require("../models/appointmentModel");
 const errorHandling = require("../utils/errorHandling");
 const doctorModel = require("../models/doctorModel");
 const sendEmail = require("../utils/sendMail");
-const {approveMessage,rejectMessage}=require("../utils/message")
+const { approveMessage, rejectMessage } = require("../utils/message")
 
 
 
@@ -99,7 +99,7 @@ module.exports.approveAppointment = async (req, res, next) => {
         );
 
         // Notify the patient 
-        const message =approveMessage(updatedAppointment.patient_name,doctor.name,date,time)
+        const message = approveMessage(updatedAppointment.patient_name, doctor.name, date, time)
         const subject = "Appointment Approval Notification";
         const email = updatedAppointment.patient_email;
         const name = updatedAppointment.patient_name;
@@ -172,7 +172,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
         }
 
         // Prepare the email details
-        const message =rejectMessage(updatedAppointment.patient_name,checkDoctor.name,reason)
+        const message = rejectMessage(updatedAppointment.patient_name, checkDoctor.name, reason)
         const subject = "Appointment Approval Notification";
         const email = updatedAppointment.patient_email;
         const name = updatedAppointment.patient_name;
@@ -184,7 +184,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
         res.status(200).json({
             status: true,
             message: "Appointment rejected successfully and email is send to patient",
-           
+
         });
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
@@ -193,8 +193,63 @@ module.exports.rejectAppointment = async (req, res, next) => {
 
 
 // delete by admin
+module.exports.deleteAppointment = async (req, res, next) => {
+    try {
+        if (req.admin.role === "admin" || req.admin.role === "root") {
+            const { appointmentId } = req.query;
+            if (!appointmentId) return next(new errorHandling("No appointment id is given", 404));
+            const deleteAppointment = await appointmentModel.findByIdAndDelete(appointmentId);
+            if (!deleteAppointment) return next(new errorHandling("Failed to delete appointment", 400));
+            res.status(200).json({
+                status: true,
+                message: `${deleteAppointment.patient_name}'s appointment deleted sucessfully`
+            })
+        } else {
+            return next(new errorHandling("You donot have enough permisson to delete the appointment", 400));
+        }
 
-// view by admin
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500));
+    }
+
+}
+
+//view all apointment by admin or root
+module.exports.viewAppointments = async (req, res, next) => {
+    try {
+        if (req.admin.role === "root" || req.admin.role === "admin") {
+            const viewAppointments = await appointmentModel.find({}, "-id -__v");
+            if (!viewAppointments || Object.keys(viewAppointments).length<=0) return next(new errorHandling("Donot have appointment on database",400));
+            res.status(200).json({
+                status: true,
+                appointments: viewAppointments
+            });
+        } else {
+            return next(new errorHandling("You donot have enough permission to view appointments", 404));
+        }
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500));
+    }
+}
+
+module.exports.viewDoctorAppointment=async (req,res,next)=>{
+    try {
+        if(req.admin.role!=="doctor")return next(new errorHandling("You donot have enough permission to view ",400));
+        const doctorId=req.admin.adminId;
+        if(!doctorId)return next(new errorHandling("No doctor id is given ",400));
+        const view=await appointmentModel.find({"doctor_id":doctorId},"-doctor_id -__v");
+        if(!view ||Object.keys(view).length<=0)return next(new errorHandling("No appointment found",404));
+        res.status(200).json({
+            status:true,
+            appointment:view
+
+        })
+    } catch (error) {
+        return next(new errorHandling(error.message,error.statusCode||500));
+        
+    }
+}
+
 
 
 
