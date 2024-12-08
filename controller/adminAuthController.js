@@ -4,9 +4,9 @@ const bcrypt = require("bcryptjs");
 const validateEmail = require("../utils/emailValidation");
 const jwt = require("jsonwebtoken");
 const emailValidation = require("../utils/emailValidation");
-const crypto=require("crypto");
-const sendMail=require("../utils/sendMail")
-const{forgotMessage}=require("../utils/forgetMessage")
+const crypto = require("crypto");
+const sendMail = require("../utils/sendMail")
+const { forgotMessage } = require("../utils/forgetMessage")
 
 //@desc:check whether a user is login or not 
 module.exports.checkJwt = (req, res, next) => {
@@ -325,65 +325,86 @@ module.exports.updateAdminByRoot = async (req, res, next) => {
 }
 
 
+
+//@endpoint:localhost:3000/api/admin/forget-password
+//@method:PATCH
+//@desc:Controler to send password reset link to email
 module.exports.forgetPassword = async (req, res, next) => {
     try {
+        //destructuring email from req.body object
         const { email } = req.body;
+        // no email
         if (!email) return next(new errorHandling("Enter email", 400));
+        // validate email
         if (!emailValidation(email)) return next(new errorHandling("Enter valid email address", 400));
+        // check email in db
         const checkAdmin = await adminModel.findOne({ email }, "name")
+        // no detail found on db
         if (!checkAdmin || Object.keys(checkAdmin).length <= 0) return next(new errorHandling("No user found by this email", 404));
         const code = crypto.randomBytes(16).toString("hex"); // Generate a random code
         const expire = Date.now() + 10 * 60 * 1000; // Current time + 10 minutes in milliseconds
+        // update document 
         const update = await adminModel.findByIdAndUpdate(checkAdmin._id, {
             "code": code,
             "code_expire": expire
         })
-        if(!update || Object.keys(update).length<=0) return next(new errorHandling("Error while forgetting password please try again later",400));
-        const siteUrl=process.env.forgotUrlAdmin
-        const message=forgotMessage(code,siteUrl)
-        const subject="Forget password reset token"
-        await sendMail(next,message,subject,update.email,update.name);
-
+        // update fails
+        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Error while forgetting password please try again later", 400));
+        // message part
+        const siteUrl = process.env.forgotUrlAdmin
+        const message = forgotMessage(code, siteUrl)
+        const subject = "Forget password reset token"
+        await sendMail(next, message, subject, update.email, update.name);
+        // send response
         res.json({
-            status:true,
-            message:"Password Code is sent to your email account.The code will expire after 10 minutes "
+            status: true,
+            message: "Password Code is sent to your email account.The code will expire after 10 minutes "
         })
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
 
-//reset-password
-
+//@endpoint:localhost:3000/api/admin/reset-password/:code
+//@method:PATCH
+//@desc:Controler to reset password 
 module.exports.resetPassword = async (req, res, next) => {
     try {
+        //code from url
         const { code } = req.params;
+        // check if code is provided on url
         if (!code || Object.keys(req.params).length <= 0) return next(new errorHandling("No token for reseting password", 400));
+        // destructuring password and confirmPassword from req.body object
         let { password, confirmPassword } = req.body;
+        // if no password or confirm password the send error
         if (!password || !confirmPassword) return next(new errorHandling("Confirm Password or password must match", 400));
-
+        // if confirm password and password doesnot match
         if (confirmPassword !== password) return next(new errorHandling("Confirm Password or password must match", 400));
+        // check if code in database
         const dbCode = await adminModel.findOne({ code }, "code_expire");
+        // code not found
         if (!dbCode || Object.keys(dbCode).length <= 0) return next(new errorHandling("Reset token is invalid or expire please try again", 404));
-
+        // if the expire code is less than current date
         if (dbCode.code_expire < Date.now()) {
             dbCode.code_expire = undefined;
             dbCode.code = undefined
             await dbCode.save()
             return next(new errorHandling("Reset token is invalid or expire please try again", 404));
         }
+        // hash the password
         const hashedPassword = bcrypt.hashSync(password, 10);
-    
+        // update document
         const update = await adminModel.findByIdAndUpdate(dbCode._id, {
-            password:hashedPassword,
-            confirmPassword:undefined
+            password: hashedPassword,
+            confirmPassword: undefined
         }, { new: true });
-
+        // update fail
         if (!update) return next(new errorHandling("Cannot update password try again", 400));
-
+        // set code and code_expire to undefined
         dbCode.code_expire = undefined;
         dbCode.code = undefined
         await dbCode.save()
+        // send response
         res.status(200).json({
             status: true,
             message: "Password Updated Sucessfully"

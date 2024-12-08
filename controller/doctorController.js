@@ -301,26 +301,36 @@ module.exports.updateDoctor = async (req, res, next) => {
 }
 
 
-
+//@endpoint:localhost:3000/api/doctor/forget-password
+//@method:PATCH
+//@desc:Controler to send password reset link to email
 module.exports.forgetPassword = async (req, res, next) => {
     try {
+        // destructure email from req.body
         const { email } = req.body;
+        // email not found
         if (!email) return next(new errorHandling("Enter email", 400));
+        // validate email
         if (!emailValidation(email)) return next(new errorHandling("Enter valid email address", 400));
+        // check detail in db
         const checkDoctor = await doctorModel.findOne({ email }, "name")
+        // no detail found
         if (!checkDoctor || Object.keys(checkDoctor).length <= 0) return next(new errorHandling("No user found by this email", 404));
         const code = crypto.randomBytes(16).toString("hex"); // Generate a random code
         const expire = Date.now() + 10 * 60 * 1000; // Current time + 10 minutes in milliseconds
+        // update document
         const update = await doctorModel.findByIdAndUpdate(checkDoctor._id, {
             "code": code,
             "code_expire": expire
         })
+        // if update fails
         if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Error while forgetting password please try again later", 400));
+        // message part
         const siteUrl = process.env.forgotUrlDoctor
         const message = forgotMessage(code, siteUrl)
         const subject = "Forget password reset token"
         await sendMail(next, message, subject, update.email, update.name);
-
+        // send response
         res.json({
             status: true,
             message: "Password Code is sent to your email account.The code will expire after 10 minutes "
@@ -331,37 +341,47 @@ module.exports.forgetPassword = async (req, res, next) => {
 }
 
 
-// reset-password
+//@endpoint:localhost:3000/api/doctor/reset-password/:code
+//@method:PATCH
+//@desc:Controler to reset password 
 
 module.exports.resetPassword = async (req, res, next) => {
     try {
+        //code from url
         const { code } = req.params;
+        // check if code is provided on url
         if (!code || Object.keys(req.params).length <= 0) return next(new errorHandling("No token for reseting password", 400));
+        // destructuring password and confirmPassword from req.body object
         let { password, confirmPassword } = req.body;
+        // if no password or confirm password the send error
         if (!password || !confirmPassword) return next(new errorHandling("Confirm Password or password must match", 400));
-
+        // if confirm password and password doesnot match
         if (confirmPassword !== password) return next(new errorHandling("Confirm Password or password must match", 400));
+        // check if code in database
         const dbCode = await doctorModel.findOne({ code }, "code_expire");
+        // code not found
         if (!dbCode || Object.keys(dbCode).length <= 0) return next(new errorHandling("Reset token is invalid or expire please try again", 404));
-
+        // if the expire code is less than current date
         if (dbCode.code_expire < Date.now()) {
             dbCode.code_expire = undefined;
             dbCode.code = undefined
             await dbCode.save()
             return next(new errorHandling("Reset token is invalid or expire please try again", 404));
         }
+        // hash the password
         const hashedPassword = bcrypt.hashSync(password, 10);
-
+        // update document
         const update = await doctorModel.findByIdAndUpdate(dbCode._id, {
             password: hashedPassword,
             confirmPassword: undefined
         }, { new: true });
-
+        // update fail
         if (!update) return next(new errorHandling("Cannot update password try again", 400));
-
+        // set code and code_expire to undefined
         dbCode.code_expire = undefined;
         dbCode.code = undefined
         await dbCode.save()
+        // send response
         res.status(200).json({
             status: true,
             message: "Password Updated Sucessfully"
