@@ -108,7 +108,7 @@ module.exports.adminLogin = async (req, res, next) => {
         const admin = await adminModel.findOne({ email }, "name email password role");//fetch only name,email and password ,role
 
         // if no email found then send error
-        if (!admin || admin.length <= 0) return next(new errorHandling("No admin found by this email", 404));
+        if (!admin || Object.keys(admin).length <= 0) return next(new errorHandling("No admin found by this email", 404));
         //  store the password of database
         const dbPassword = admin.password;
         // compare database password with user password
