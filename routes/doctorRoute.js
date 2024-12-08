@@ -4,7 +4,6 @@ const { checkJwt } = require("../controller/adminAuthController.js");
 const {checkingPatientAndData,createReport,updateReport}=require("../controller/medicalController.js")
 const{approveAppointment,rejectAppointment,viewDoctorAppointment}=require("../controller/appointmentControlelr.js")
 
-// Create the router and define the route
 const Router = express.Router();
 
 Router.route("/login-doctor").post(doctorLogin);
@@ -29,5 +28,5 @@ Router.route("/reject-appointment").patch(checkJwt,rejectAppointment);
 
 
 
-// router.route("/").post(createPatientRecord);
+
 module.exports = Router;
