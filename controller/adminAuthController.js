@@ -332,7 +332,7 @@ module.exports.forgetPassword = async (req, res, next) => {
         if (!emailValidation(email)) return next(new errorHandling("Enter valid email address", 400));
         const checkAdmin = await adminModel.findOne({ email }, "name")
         if (!checkAdmin || Object.keys(checkAdmin).length <= 0) return next(new errorHandling("No user found by this email", 404));
-        const code = crypto.randomBytes(10).toString("hex"); // Generate a random code
+        const code = crypto.randomBytes(16).toString("hex"); // Generate a random code
         const expire = Date.now() + 10 * 60 * 1000; // Current time + 10 minutes in milliseconds
         const update = await adminModel.findByIdAndUpdate(checkAdmin._id, {
             "code": code,

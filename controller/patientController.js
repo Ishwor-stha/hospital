@@ -321,7 +321,7 @@ module.exports.forgetPassword = async (req, res, next) => {
         if (!emailValidation(email)) return next(new errorHandling("Enter valid email address", 400));
         const checkPatient = await patientModel.findOne({ email }, "name")
         if (!checkPatient || Object.keys(checkPatient).length <= 0) return next(new errorHandling("No user found by this email", 404));
-        const code = crypto.randomBytes(10).toString("hex"); // Generate a random code
+        const code = crypto.randomBytes(16).toString("hex"); // Generate a random code
         const expire = Date.now() + 10 * 60 * 1000; // Current time + 10 minutes in milliseconds
         const update = await patientModel.findByIdAndUpdate(checkPatient._id, {
             "code": code,
@@ -344,3 +344,14 @@ module.exports.forgetPassword = async (req, res, next) => {
 
 
 // reset-password
+
+module.exports.resetPassword=(req,res,next)=>{
+    try {
+        const {code}=req.params;
+        if( !code ||Object.keys(req.params).length<=0)return next(new errorHandling("No token for reseting password",400));
+        
+
+    } catch (error) {
+        return next(new errorHandling(error.message,error.statusCode||500));
+    }
+}
