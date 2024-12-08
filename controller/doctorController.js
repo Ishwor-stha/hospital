@@ -350,7 +350,7 @@ module.exports.resetPassword = async (req, res, next) => {
         //code from url
         const { code } = req.params;
         // check if code is provided on url
-        if (!code || Object.keys(req.params).length <= 0) return next(new errorHandling("No token for reseting password", 400));
+        if (!code || Object.keys(req.params).length <= 0) return next(new errorHandling("No token for resetting password", 400));
         // destructuring password and confirmPassword from req.body object
         let { password, confirmPassword } = req.body;
         // if no password or confirm password the send error

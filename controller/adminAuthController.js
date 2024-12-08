@@ -38,7 +38,7 @@ module.exports.checkJwt = (req, res, next) => {
 //@desc:Get admin details 
 module.exports.getAdmin = async (req, res, next) => {
     try {
-        if (req.admin.role != "root") return next(new errorHandling("You are not authorized to perform this task", 400));
+        if (req.admin.role != "root") return next(new errorHandling("You are not authorized to perform this task", 403));
         // fetch all detalil from database;
         const admins = await adminModel.find({}, "name role email -_id");
         // no details on databse;
@@ -59,7 +59,7 @@ module.exports.getAdmin = async (req, res, next) => {
 module.exports.createAdmin = async (req, res, next) => {
     try {
         // allow only if the user is root
-        if (req.admin.role != "root") return next(new errorHandling("You donot have enough permission", 404));
+        if (req.admin.role != "root") return next(new errorHandling("You donot have enough permission", 403));
         // req.body is empty
         if (Object.keys(req.body).length <= 0) return next(new errorHandling("No data is given", 404));
         // list of possible fields
@@ -78,7 +78,7 @@ module.exports.createAdmin = async (req, res, next) => {
         // data update fails send error 
         if (!upload) return next(new errorHandling("cannot create Admin", 400));
         // send sucess message
-        res.status(200).json({
+        res.status(201).json({
             status: true,
             message: `${upload.name} admin created sucessfully`
         });
@@ -114,7 +114,7 @@ module.exports.adminLogin = async (req, res, next) => {
         // compare database password with user password
         const isvalid = await bcrypt.compare(password, dbPassword);
         // if password is not valid then throw error
-        if (!isvalid) return next(new errorHandling("Password is incorrect", 400));
+        if (!isvalid) return next(new errorHandling("Password is incorrect", 403));
         // create payload for jwt 
         const payload = {
             adminId: admin._id,
@@ -172,7 +172,7 @@ module.exports.logoutAdmin = (req, res, next) => {
 module.exports.deleteAdmin = async (req, res, next) => {
     try {
         // if user is not root the throw error
-        if (req.admin.role !== "root") return next(new errorHandling("You dont have enough permission to delete admin", 404));
+        if (req.admin.role !== "root") return next(new errorHandling("You dont have enough permission to delete admin", 403));
         // if id is not given on url
         if (!req.params.id || Object.keys(req.params) <= 0) return next(new errorHandling("No id is given", 404));
         // id from url
