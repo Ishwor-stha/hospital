@@ -15,7 +15,7 @@ module.exports.getAllPatient = async (req, res, next) => {
     try {
         // fetch all paatient data
         if (!["root", "admin", "doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
-        const patientDetails = await patientModel.find({}, "-__v ");
+        const patientDetails = await patientModel.find({}, "-__v -password -code_expire -code");
         // no patient
         if (!patientDetails || patientDetails <= 0) {
             return next(new errorHandling("No patient in database", 404));
@@ -47,7 +47,7 @@ module.exports.getPatientByPatientId = async (req, res, next) => {
         // validate patient id
         if (!patientIdValidation(patientId)) return next(new errorHandling("Invalid patient Id", 404));
         // fetch patient detail
-        const patientDetail = await patientModel.find({ "patient_id": patientId }, "-__v");//exclude __v
+        const patientDetail = await patientModel.find({ "patient_id": patientId }, "-__v -password -code_expire -code");//exclude __v
         // no patient detail
         if (!patientDetail || patientDetail <= 0) return next(new errorHandling("Cannot find patient", 404));
 
@@ -109,6 +109,9 @@ module.exports.postPatient = async (req, res, next) => {
 
 }
 
+// @endPoint:localhost:3000/api/patient/login-patient
+// @method:post
+// @desc:controller to login by patient
 module.exports.patientLogin = async (req, res, next) => {
     try {
         // extract all keys from req.body on array
@@ -301,7 +304,7 @@ module.exports.getPatientByName = async (req, res, next) => {
 
         if (req.query.contact) searching["contact"] = req.query.contact;
         // find detail
-        const details = await patientModel.find(searching, "-__v");
+        const details = await patientModel.find(searching, "-__v -password -code_expire -code");
         // no details
         if (!details || details <= 0) return next(new errorHandling("No patient found", 404));
         // send response

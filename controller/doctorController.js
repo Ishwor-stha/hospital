@@ -13,7 +13,7 @@ const sendMail = require("../utils/sendMail")
 module.exports.getDoctors = async (req, res, next) => {
     try {
         //fetch data
-        const doctors = await doctorModel.find({}, "-role -password -_id -__v");//only fetch name email and role field
+        const doctors = await doctorModel.find({}, "-__v -password -code_expire -code -role");//only fetch name email and role field
         // no details
         if (!doctors) return next(new errorHandling("No doctor in database"), 404);
         //send resposnse
@@ -45,7 +45,7 @@ module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
         // if there is phone in qurey
         if (req.query.phone) searching["phone"] = req.query.phone;
         // find detail
-        const details = await doctorModel.find(searching, "-role -password -_id -__v");
+        const details = await doctorModel.find(searching, "-__v -password -code_expire -code -role");
         // no details
         if (!details || details <= 0) return next(new errorHandling("No Doctor found", 404));
         // send response
@@ -306,7 +306,7 @@ module.exports.updateDoctor = async (req, res, next) => {
 //@desc:Controler to send password reset link to email
 module.exports.forgetPassword = async (req, res, next) => {
     try {
-        // destructure email from req.body
+        //destructure email from req.body
         const { email } = req.body;
         // email not found
         if (!email) return next(new errorHandling("Enter email", 400));
