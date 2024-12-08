@@ -18,7 +18,7 @@ const xss = require("xss"); // Importing the xss package for sanitization
 
 // CORS configuration
 const corsOptions = {
-  origin: [process.env.domain], // Allow only specific origins
+  origin: process.env.domain, // Allow only specific origins
 };
 
 // Rate limiting setup
