@@ -5,8 +5,8 @@ const patientIdValidation = require("../utils/patientIdValidation");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const {forgotMessage}=require("../utils/forgetMessage");
-const sendMail=require("../utils/sendMail")
+const { forgotMessage } = require("../utils/forgetMessage");
+const sendMail = require("../utils/sendMail")
 
 //@endPoint:localhost:3000/api/patient/get-patients
 //@desc:controller to get all patient 
@@ -14,7 +14,7 @@ const sendMail=require("../utils/sendMail")
 module.exports.getAllPatient = async (req, res, next) => {
     try {
         // fetch all paatient data
-
+        if (!["root", "admin","doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
         const patientDetails = await patientModel.find({}, "-__v ");
         // no patient
         if (!patientDetails || patientDetails <= 0) {
@@ -38,6 +38,8 @@ module.exports.getAllPatient = async (req, res, next) => {
 //@method:GET
 module.exports.getPatientByPatientId = async (req, res, next) => {
     try {
+        if (!["root", "admin","doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
+    
         // no id on parameter
         if (!req.params.id) return next(new errorHandling("No patient id is provided", 404));
         // from url
@@ -264,9 +266,8 @@ module.exports.updatePatient = async (req, res, next) => {
 
 module.exports.deletePatient = async (req, res, next) => {
     try {
-        // if user is doctor then throw error 
-        if (req.admin.role === "doctor") return next(new errorHandling("Doctor not allowed to delete  patient", 404));
-
+        // if user is doctor then throw error  allow only root and admin
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
         // no request data in params
         if (!req.params.id) return next(new errorHandling("No patient id is given", 400));
         // from url
@@ -290,6 +291,7 @@ module.exports.deletePatient = async (req, res, next) => {
 //@desc:Get patient details by their name or contact
 module.exports.getPatientByName = async (req, res, next) => {
     try {
+        if (!["root", "admin","doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
         //no query
         if (Object.keys(req.query).length <= 0) return next(new errorHandling("No query is given", 404));
         let searching = {};
@@ -327,15 +329,15 @@ module.exports.forgetPassword = async (req, res, next) => {
             "code": code,
             "code_expire": expire
         })
-        if(!update || Object.keys(update).length<=0) return next(new errorHandling("Error while forgetting password please try again later",400));
-        const siteUrl=process.env.forgotUrlPatient
-        const message=forgotMessage(code,siteUrl)
-        const subject="Forget password reset token"
-        await sendMail(next,message,subject,update.email,update.name);
+        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Error while forgetting password please try again later", 400));
+        const siteUrl = process.env.forgotUrlPatient
+        const message = forgotMessage(code, siteUrl)
+        const subject = "Forget password reset token"
+        await sendMail(next, message, subject, update.email, update.name);
 
         res.json({
-            status:true,
-            message:"Password Code is sent to your email account.The code will expire after 10 minutes "
+            status: true,
+            message: "Password Code is sent to your email account.The code will expire after 10 minutes "
         })
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
@@ -345,13 +347,42 @@ module.exports.forgetPassword = async (req, res, next) => {
 
 // reset-password
 
-module.exports.resetPassword=(req,res,next)=>{
+module.exports.resetPassword = async (req, res, next) => {
     try {
-        const {code}=req.params;
-        if( !code ||Object.keys(req.params).length<=0)return next(new errorHandling("No token for reseting password",400));
-        
+        const { code } = req.params;
+        if (!code || Object.keys(req.params).length <= 0) return next(new errorHandling("No token for reseting password", 400));
+        let { password, confirmPassword } = req.body;
+        if (!password || !confirmPassword) return next(new errorHandling("Confirm Password or password must match", 400));
+
+        if (confirmPassword !== password) return next(new errorHandling("Confirm Password or password must match", 400));
+        const dbCode = await patientModel.findOne({ code }, "code_expire");
+        if (!dbCode || Object.keys(dbCode).length <= 0) return next(new errorHandling("Reset token is invalid or expire please try again", 404));
+
+        if (dbCode.code_expire < Date.now()) {
+            dbCode.code_expire = undefined;
+            dbCode.code = undefined
+            await dbCode.save()
+            return next(new errorHandling("Reset token is invalid or expire please try again", 404));
+        }
+        const hashedPassword = bcrypt.hashSync(password, 10);
+    
+        const update = await patientModel.findByIdAndUpdate(dbCode._id, {
+            password:hashedPassword,
+            confirmPassword:undefined
+        }, { new: true });
+
+        if (!update) return next(new errorHandling("Cannot update password try again", 400));
+
+        dbCode.code_expire = undefined;
+        dbCode.code = undefined
+        await dbCode.save()
+        res.status(200).json({
+            status: true,
+            message: "Password Updated Sucessfully"
+        })
+
 
     } catch (error) {
-        return next(new errorHandling(error.message,error.statusCode||500));
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }

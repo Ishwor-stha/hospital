@@ -1,7 +1,7 @@
 const Router=require("express").Router();
 const { checkJwt } = require("../controller/adminAuthController");
 // const Router=express.Router()
-const {getAllPatient,postPatient,getPatientByPatientId,updatePatient,deletePatient,getPatientByName,patientLogin,forgetPassword}=require("../controller/patientController");
+const {getAllPatient,postPatient,getPatientByPatientId,updatePatient,deletePatient,getPatientByName,patientLogin,forgetPassword,resetPassword}=require("../controller/patientController");
 const {createAppointment,viewPatientAppointment}=require("../controller/appointmentControlelr");
 
 
@@ -13,8 +13,8 @@ Router.route("/create-patient").post(checkJwt,postPatient);
 Router.route("/get-patient/:id").get(checkJwt,getPatientByPatientId);
 
 Router.route("/login-patient").post(patientLogin)
-// Router.route("/reset-password/:code").patch(reset-password)
 
+Router.route("/reset-password/:code").patch(resetPassword)
 
 Router.route("/forgot-password").patch(forgetPassword)
 

@@ -354,3 +354,43 @@ module.exports.forgetPassword = async (req, res, next) => {
 }
 
 //reset-password
+
+module.exports.resetPassword = async (req, res, next) => {
+    try {
+        const { code } = req.params;
+        if (!code || Object.keys(req.params).length <= 0) return next(new errorHandling("No token for reseting password", 400));
+        let { password, confirmPassword } = req.body;
+        if (!password || !confirmPassword) return next(new errorHandling("Confirm Password or password must match", 400));
+
+        if (confirmPassword !== password) return next(new errorHandling("Confirm Password or password must match", 400));
+        const dbCode = await adminModel.findOne({ code }, "code_expire");
+        if (!dbCode || Object.keys(dbCode).length <= 0) return next(new errorHandling("Reset token is invalid or expire please try again", 404));
+
+        if (dbCode.code_expire < Date.now()) {
+            dbCode.code_expire = undefined;
+            dbCode.code = undefined
+            await dbCode.save()
+            return next(new errorHandling("Reset token is invalid or expire please try again", 404));
+        }
+        const hashedPassword = bcrypt.hashSync(password, 10);
+    
+        const update = await adminModel.findByIdAndUpdate(dbCode._id, {
+            password:hashedPassword,
+            confirmPassword:undefined
+        }, { new: true });
+
+        if (!update) return next(new errorHandling("Cannot update password try again", 400));
+
+        dbCode.code_expire = undefined;
+        dbCode.code = undefined
+        await dbCode.save()
+        res.status(200).json({
+            status: true,
+            message: "Password Updated Sucessfully"
+        })
+
+
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500));
+    }
+}

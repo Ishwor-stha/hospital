@@ -102,27 +102,18 @@ const patientSchema = mongoose.Schema({
         type: String
     },
     code_expire: {
-        type: String
+        type: Number
     }
 
 
 
 });
 patientSchema.pre("save", async function (next) {
-    // Check if the email already exists in the database
-    const existingPatient = await mongoose.model("Patient").findOne({ email: this.email });
-
-    if (existingPatient) {
-        const error = new Error("Email already exists");
-        return next(error); // Reject save if email exists
-    }
-
     // If the password is modified, hash it before saving
     if (this.isModified("password")) {
         this.password = bcrypt.hashSync(this.password, 10);
         this.confirmPassword = undefined; // Remove confirmPassword after hashing
     }
-
     next();
 });
 
