@@ -70,7 +70,6 @@ module.exports.getPatientByPatientId = async (req, res, next) => {
 // @endpoint:localhost:3000/api/patient/create-patients
 //@desc:controller to post   patient 
 //@method:POST
-
 module.exports.postPatient = async (req, res, next) => {
     try {
         // no body

@@ -5,7 +5,6 @@ module.exports = (server) => {
     process.on("uncaughtException", (err) => {
         console.error("Uncaught Exception:", err.message);
         console.error(err.stack);
-        // Optionally, log the error to a monitoring service like Sentry, etc.
 
         // Gracefully shutdown the server
         server.close(() => {
@@ -21,7 +20,6 @@ module.exports = (server) => {
     // Global unhandled promise rejection handler
     process.on("unhandledRejection", (reason, promise) => {
         console.error("Unhandled Rejection at:", promise, "reason:", reason);
-        // Optionally, log the error to a monitoring service
 
         // Gracefully shutdown the server
         server.close(() => {

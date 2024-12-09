@@ -223,14 +223,14 @@ module.exports.deleteAppointment = async (req, res, next) => {
 //@desc:controller to view appointment by the admin
 module.exports.viewAppointments = async (req, res, next) => {
     try {
-        if(!["root","admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task",403));
-            const viewAppointments = await appointmentModel.find({}, "-id -__v");
-            if (!viewAppointments || Object.keys(viewAppointments).length <= 0) return next(new errorHandling("Donot have appointment on database", 404));
-            res.status(200).json({
-                status: true,
-                appointments: viewAppointments
-            });
-        
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403));
+        const viewAppointments = await appointmentModel.find({}, "-id -__v");
+        if (!viewAppointments || Object.keys(viewAppointments).length <= 0) return next(new errorHandling("Donot have appointment on database", 404));
+        res.status(200).json({
+            status: true,
+            appointments: viewAppointments
+        });
+
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }

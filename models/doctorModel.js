@@ -91,11 +91,11 @@ const doctorSchema = mongoose.Schema({
         enum: ["doctor"],
         default: "doctor",
     },
-    code:{
-        type:String
+    code: {
+        type: String
     },
-    code_expire:{
-        type:String
+    code_expire: {
+        type: String
     }
 });
 

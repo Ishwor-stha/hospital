@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const medicalRecordSchema = mongoose.Schema({
     // Reference to the Patient
     patient_id: {
-        type:mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         required: [true, "Patient ID is required"],
         ref: "Patients", // Establishes a relationship with the Patient model
     },
