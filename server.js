@@ -80,8 +80,8 @@ app.use(errorController);
 
 // Start the server
 const server = app.listen(process.env.PORT || 3000, () => {
-  console.log(`Server is running on port ${process.env.PORT}`);
-  console.log(`App is running in ${process.env.NODE_ENV} mode`);
+  console.log(`Server is running on port ${process.env.PORT}.`);
+  console.log(`App is running in ${process.env.NODE_ENV} mode.`);
 });
 
 // Handle uncaught errors
