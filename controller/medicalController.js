@@ -150,3 +150,31 @@ module.exports.deleteMedicalReport = async (req, res, next) => {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
+module.exports.viewMedicalReport=async(req,res,next)=>{
+    try {
+        if(!["root","admin"].includes(req.admin.role))return next(new errorHandling("You donot have enough permission to perform this task",403));
+        const view=await medicalModel.find();
+        if(!view ||Object.keys(view).length<=0)return next(new errorHandling("No medical report found on database",404));
+        res.status(200).json({
+            status:true,
+            medicalReport:view
+        })
+    } catch (error) {
+        return next(new errorHandling(error.message,error.statusCode || 500));
+    }
+}
+
+module.exports.viewSpecificMedicalReport=async(req,res,next)=>{
+    try {
+    if(req.admin.role!=="doctor") return next(new errorHandling("You donot have enough permission to perform this task",403));
+    const doctorId=req.admin.adminId;
+    const view=await medicalModel.find({doctor_id:doctorId}); 
+    if(!view ||Object.keys(view).length<=0)return next(new errorHandling("No medical report is created ",404));
+    res.status(200).json({
+        status:true,
+        medicalReport:view
+    })     
+    } catch (error) {
+        return next(new errorHandling(error.message,error.statusCode ||500));
+    }
+}

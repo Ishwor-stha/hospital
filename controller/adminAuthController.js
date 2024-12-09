@@ -40,7 +40,7 @@ module.exports.getAdmin = async (req, res, next) => {
     try {
         if (req.admin.role != "root") return next(new errorHandling("You are not authorized to perform this task", 403));
         // fetch all detalil from database;
-        const admins = await adminModel.find({}, "name role email -_id");
+        const admins = await adminModel.find({}, "name  email -_id");
         // no details on databse;
         if (!admins || Object.keys(admins).length <= 0) return next(new errorHandling("There is no admin in database", 404));
         // send sucess response

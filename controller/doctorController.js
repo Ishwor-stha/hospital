@@ -185,7 +185,7 @@ module.exports.deleteDoctor = async (req, res, next) => {
         let id = req.params.id
         // deleting doctor
         let delDoctor = await doctorModel.findByIdAndDelete(id);
-        console.log(delDoctor)
+       
         // if no doctor by this id
         if (!delDoctor || Object.keys(delDoctor).length <= 0) return next(new errorHandling("No doctor found by this id", 404))
         // send response
