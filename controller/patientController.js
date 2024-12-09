@@ -99,13 +99,17 @@ module.exports.postPatient = async (req, res, next) => {
         // upload data
         const upload = await patientModel.create(toBeUpload);
         // if patient creation fails
-        if(!upload ||Object.keys(upload).length<=0) return next(new errorHandling("Cannot Create Patient",500))
+        if (!upload || Object.keys(upload).length <= 0) return next(new errorHandling("Cannot Create Patient", 500))
         // send response
         res.status(200).json({
             status: true,
             message: `Patient ${upload.name} account created sucessfully `
         });
     } catch (error) {
+        if (error.code === 11000) {
+            return next(new errorHandling("Email already exists. Please use a different email.", 400));
+        }
+
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 
