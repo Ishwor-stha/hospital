@@ -194,7 +194,9 @@ module.exports.rejectAppointment = async (req, res, next) => {
 };
 
 
-// delete by admin
+//@endpoint:localhost:3000/api/admin/delete-appointment?appointmentId=***  /view-appointments
+//@method:delete
+//@desc:controller to delete appointment by the admin
 module.exports.deleteAppointment = async (req, res, next) => {
     try {
         if (req.admin.role === "admin" || req.admin.role === "root") {
@@ -216,7 +218,9 @@ module.exports.deleteAppointment = async (req, res, next) => {
 
 }
 
-//view all apointment by admin or root
+//@endpoint:localhost:3000/api/admin/view-appointments
+//@method:GET
+//@desc:controller to view appointment by the admin
 module.exports.viewAppointments = async (req, res, next) => {
     try {
         if(!["root","admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task",403));
@@ -231,7 +235,9 @@ module.exports.viewAppointments = async (req, res, next) => {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
-
+//@endpoint:localhost:3000/api/doctor/view-appointment
+//@method:GET
+//@desc:controller to view appointment by the docotor
 module.exports.viewDoctorAppointment = async (req, res, next) => {
     try {
         if (req.admin.role !== "doctor") return next(new errorHandling("You donot have enough permission to view ", 403));
@@ -249,7 +255,9 @@ module.exports.viewDoctorAppointment = async (req, res, next) => {
 
     }
 }
-
+//@endpoint:localhost:3000/api/patient/view-appointment
+//@method:GET
+//@desc:controller to view appointment by the patient
 module.exports.viewPatientAppointment = async (req, res, next) => {
     try {
         if (req.admin.role !== "patient") return next(new errorHandling("You donot have enough permission to view ", 403));
