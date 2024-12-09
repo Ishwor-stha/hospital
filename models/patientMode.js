@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcryptjs");
+const errorHandling = require('../utils/errorHandling');
 
 // Define the Patient Schema
 const patientSchema = mongoose.Schema({
@@ -109,12 +110,16 @@ const patientSchema = mongoose.Schema({
 
 });
 patientSchema.pre("save", async function (next) {
-    // If the password is modified, hash it before saving
-    if (this.isModified("password")) {
-        this.password = bcrypt.hashSync(this.password, 10);
-        this.confirmPassword = undefined; // Remove confirmPassword after hashing
+    try {
+        // If the password is modified, hash it before saving
+        if (this.isModified("password")) {
+            this.password = bcrypt.hashSync(this.password, 10);
+            this.confirmPassword = undefined; // Remove confirmPassword after hashing
+        }
+        next();
+    } catch (error) {
+        next(new errorHandling(error.message, error.statusCode || 500));
     }
-    next();
 });
 
 // Create and export the model

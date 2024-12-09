@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const emailValidation = require("../utils/emailValidation");
 const bcrypt = require("bcryptjs");
+const errorHandling=require("../utils/errorHandling");
 
 // Define the Doctor Schema
 const doctorSchema = mongoose.Schema({
@@ -102,8 +103,6 @@ const doctorSchema = mongoose.Schema({
 // Middleware: Pre-save Hook
 doctorSchema.pre("save", async function (next) {
     try {
-
-
         // Hash password if modified
         if (this.isModified("password")) {
             this.password = await bcrypt.hash(this.password, 10);
@@ -112,7 +111,7 @@ doctorSchema.pre("save", async function (next) {
 
         next();
     } catch (error) {
-        next(error);
+        next(new errorHandling(error.message,error.statusCode ||500));
     }
 });
 

@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const validateEmail = require("../utils/emailValidation");
+const errorHandling = require("../utils/errorHandling");
+
 
 const adminSchema = mongoose.Schema({
     name: {
@@ -52,21 +54,25 @@ const adminSchema = mongoose.Schema({
 
 // Pre-save hook for checking duplicate email and hashing password
 adminSchema.pre("save", async function (next) {
-    // Check if the email already exists in the database
-    const existingAdmin = await mongoose.model("admin").findOne({ email: this.email });
+    try {
+        // Check if the email already exists in the database
+        const existingAdmin = await mongoose.model("admin").findOne({ email: this.email });
 
-    if (existingAdmin) {
-        const error = new Error("Email already exists");
-        return next(error); // Reject save if email exists
+        if (existingAdmin) {
+
+            return next(new errorHandling("Email already exists", 400)); // Reject save if email exists
+        }
+
+        // If the password is modified, hash it before saving
+        if (this.isModified("password")) {
+            this.password = bcrypt.hashSync(this.password, 10);
+            this.confirmPassword = undefined; // Remove confirmPassword after hashing
+        }
+
+        next();
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
-
-    // If the password is modified, hash it before saving
-    if (this.isModified("password")) {
-        this.password = bcrypt.hashSync(this.password, 10);
-        this.confirmPassword = undefined; // Remove confirmPassword after hashing
-    }
-
-    next();
 });
 
 
