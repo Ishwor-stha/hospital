@@ -14,7 +14,7 @@ const sendMail = require("../utils/sendMail")
 module.exports.getAllPatient = async (req, res, next) => {
     try {
         // fetch all paatient data
-        if (!["root", "admin", "doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
+        if (!["root", "admin", "doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
         const patientDetails = await patientModel.find({}, "-__v -password -code_expire -code");
         // no patient
         if (!patientDetails || patientDetails <= 0) {
@@ -38,14 +38,14 @@ module.exports.getAllPatient = async (req, res, next) => {
 //@method:GET
 module.exports.getPatientByPatientId = async (req, res, next) => {
     try {
-        if (!["root", "admin", "doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
+        if (!["root", "admin", "doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
 
         // no id on parameter
-        if (!req.params.id) return next(new errorHandling("No patient id is provided", 404));
+        if (!req.params.id) return next(new errorHandling("No patient id is provided", 400));
         // from url
         const patientId = req.params.id;
         // validate patient id
-        if (!patientIdValidation(patientId)) return next(new errorHandling("Invalid patient Id", 404));
+        if (!patientIdValidation(patientId)) return next(new errorHandling("Invalid patient Id", 400));
         // fetch patient detail
         const patientDetail = await patientModel.find({ "patient_id": patientId }, "-__v -password -code_expire -code");//exclude __v
         // no patient detail
@@ -74,7 +74,7 @@ module.exports.getPatientByPatientId = async (req, res, next) => {
 module.exports.postPatient = async (req, res, next) => {
     try {
         // no body
-        if (!req.body) return next(new errorHandling("Empty fields", 404));
+        if (!req.body) return next(new errorHandling("Empty fields", 400));
         // if email is provided
         if (req.body.email) {
 
@@ -98,6 +98,8 @@ module.exports.postPatient = async (req, res, next) => {
 
         // upload data
         const upload = await patientModel.create(toBeUpload);
+        // if patient creation fails
+        if(!upload ||Object.keys(upload).length<=0) return next(new errorHandling("Cannot Create Patient",500))
         // send response
         res.status(200).json({
             status: true,
@@ -169,7 +171,7 @@ module.exports.patientLogin = async (req, res, next) => {
 module.exports.updatePatient = async (req, res, next) => {
     try {
         // if the user is doctor then throw error (only admin and root user can modify patients details)
-        if (req.admin.role !== "patient") return next(new errorHandling("You donot have enough permission to update the details of patient", 404));
+        if (req.admin.role !== "patient") return next(new errorHandling("You donot have enough permission to update the details of patient", 403));
         if (!req.admin.adminId) return next(new errorHandling("Patient Id is missing ", 400));
         const id = req.admin.adminId;
 
@@ -184,7 +186,7 @@ module.exports.updatePatient = async (req, res, next) => {
                 // check email on database
                 const check = await patientModel.find({ "email": req.body.email }, "email");
                 // if there is email on data base send error
-                if (Object.keys(check).length > 0) return next(new errorHandling("Email already exists", 404));
+                if (Object.keys(check).length > 0) return next(new errorHandling("Email already exists", 400));
 
             } else {
                 // if email validation fails
@@ -201,7 +203,7 @@ module.exports.updatePatient = async (req, res, next) => {
         // Fetch the patient from the database using their ID
         const getDetail = await patientModel.findById(id, "emergency_contact");
         // no patient detail
-        if (!getDetail) return next(new errorHandling("No patient found", 400));
+        if (!getDetail) return next(new errorHandling("No patient found", 404));
         // 
         const dbEmergencyContact = getDetail.emergency_contact; // Existing emergency contact data
 
@@ -238,7 +240,7 @@ module.exports.updatePatient = async (req, res, next) => {
         }
         if (req.body.password) {
             if (req.body.password != req.body.confirmPassword) {
-                return next(new errorHandling("Enter valid password", 404));
+                return next(new errorHandling("Enter valid password", 400));
 
             } else {
                 updatedData["password"] = bcrypt.hashSync(req.body.password, 10)
@@ -249,7 +251,7 @@ module.exports.updatePatient = async (req, res, next) => {
 
         // Update the patient document in the database
         const updatedPatient = await patientModel.findByIdAndUpdate(id, updatedData, { new: true, projection: { name: 1 } });
-        if (!updatedPatient) return next(new errorHandling("Error updating Data", 400));
+        if (!updatedPatient) return next(new errorHandling("Error updating Data", 500));
 
         // Return the success response with updated patient details
         res.status(200).json({
@@ -270,7 +272,7 @@ module.exports.updatePatient = async (req, res, next) => {
 module.exports.deletePatient = async (req, res, next) => {
     try {
         // if user is doctor then throw error  allow only root and admin
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
         // no request data in params
         if (!req.params.id) return next(new errorHandling("No patient id is given", 400));
         // from url
@@ -294,9 +296,9 @@ module.exports.deletePatient = async (req, res, next) => {
 //@desc:Get patient details by their name or contact
 module.exports.getPatientByName = async (req, res, next) => {
     try {
-        if (!["root", "admin", "doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
+        if (!["root", "admin", "doctor"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
         //no query
-        if (Object.keys(req.query).length <= 0) return next(new errorHandling("No query is given", 404));
+        if (Object.keys(req.query).length <= 0) return next(new errorHandling("No query is given", 400));
         let searching = {};
         // if name is given on query
         if (req.query.name) searching["name"] = { $regex: req.query.name, $options: "i" };//case inscensitive and finds name similar to given input
@@ -341,7 +343,7 @@ module.exports.forgetPassword = async (req, res, next) => {
             "code_expire": expire
         })
         // update fails
-        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Error while forgetting password please try again later", 400));
+        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Something went wrong please try again later", 500));
         // message part
         const siteUrl = process.env.forgotUrlPatient
         const message = forgotMessage(code, siteUrl)
@@ -376,13 +378,13 @@ module.exports.resetPassword = async (req, res, next) => {
         // check if code in database
         const dbCode = await patientModel.findOne({ code }, "code_expire");
         // code not found
-        if (!dbCode || Object.keys(dbCode).length <= 0) return next(new errorHandling("Reset token is invalid or expire please try again", 404));
+        if (!dbCode || Object.keys(dbCode).length <= 0) return next(new errorHandling("Reset token is invalid or expire please try again", 400));
         // if the expire code is less than current date
         if (dbCode.code_expire < Date.now()) {
             dbCode.code_expire = undefined;
             dbCode.code = undefined
             await dbCode.save()
-            return next(new errorHandling("Reset token is invalid or expire please try again", 404));
+            return next(new errorHandling("Reset token is invalid or expire please try again", 400));
         }
         // hash the password
         const hashedPassword = bcrypt.hashSync(password, 10);
@@ -392,7 +394,7 @@ module.exports.resetPassword = async (req, res, next) => {
             confirmPassword: undefined
         }, { new: true });
         // update fail
-        if (!update) return next(new errorHandling("Cannot update password try again", 400));
+        if (!update) return next(new errorHandling("Cannot update password try again", 500));
         // set code and code_expire to undefined
         dbCode.code_expire = undefined;
         dbCode.code = undefined

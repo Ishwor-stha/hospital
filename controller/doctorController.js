@@ -36,9 +36,9 @@ module.exports.getDoctors = async (req, res, next) => {
 module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
     try {
         //allow if the user is root or admin
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404));
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403));
         //check if there is query presented on URL
-        if (Object.keys(req.query).length <= 0) return next(new errorHandling("No query is given", 404));
+        if (Object.keys(req.query).length <= 0) return next(new errorHandling("No query is given", 400));
         let searching = {};//create empty object variable
         //if there is name on qurey
         if (req.query.name) searching["name"] = { $regex: req.query.name, $options: "i" };//case inscensitive and finds name similar to given input
@@ -65,10 +65,10 @@ module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
 module.exports.createDoctor = async (req, res, next) => {
     try {
         // allow only if user is root or admin
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
 
         // if body is empty
-        if (Object.keys(req.body).length <= 0) return next(new errorHandling("The body is empty", 404))
+        if (Object.keys(req.body).length <= 0) return next(new errorHandling("The body is empty", 400))
         //list of fields
         let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword"];
         let upload = {}
@@ -82,7 +82,7 @@ module.exports.createDoctor = async (req, res, next) => {
         //create data on database
         const create = await doctorModel.create(upload);
         //data creation failed
-        if (!create) return next(new errorHandling("Cannot create doctor please try again", 400));
+        if (!create) return next(new errorHandling("Cannot create doctor please try again", 500));
         //send success message
         res.status(200).json({
             status: true,
@@ -91,7 +91,7 @@ module.exports.createDoctor = async (req, res, next) => {
         });
     } catch (error) {
         // this erorr code is for duplicate email
-        if (error.code === 11000) return next(new errorHandling("Email already exists", 404))
+        if (error.code === 11000) return next(new errorHandling("Email already exists", 400))
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
@@ -102,10 +102,10 @@ module.exports.createDoctor = async (req, res, next) => {
 module.exports.modifyDoctor = async (req, res, next) => {
     try {
         //allow only if user is admin or root
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
 
         // if body is empty
-        if (Object.keys(req.body).length <= 0) return next(new errorHandling("The body is empty", 404))
+        if (Object.keys(req.body).length <= 0) return next(new errorHandling("The body is empty", 400))
         // listing the possible keys of object
         let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword"];
         let upload = {}
@@ -156,7 +156,7 @@ module.exports.modifyDoctor = async (req, res, next) => {
             }
         );
         // update fails
-        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Cannot update details", 404))
+        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Cannot update details", 500))
         // send response
         res.status(200).json({
             status: true,
@@ -180,7 +180,7 @@ module.exports.modifyDoctor = async (req, res, next) => {
 module.exports.deleteDoctor = async (req, res, next) => {
     try {
         //allow only if user is root or admin
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 404))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
         // id from url
         let id = req.params.id
         // deleting doctor
@@ -260,9 +260,9 @@ module.exports.doctorLogin = async (req, res, next) => {
 module.exports.updateDoctor = async (req, res, next) => {
     try {
         // allow if the user is doctor
-        if (req.admin.role != "doctor") return next(new errorHandling("Only a doctor can perform this task", 404));
+        if (req.admin.role != "doctor") return next(new errorHandling("Only a doctor can perform this task", 403));
         // if the req.body is empty
-        if (Object.keys(req.body).length <= 0) return next(new errorHandling("Empty body", 404));
+        if (Object.keys(req.body).length <= 0) return next(new errorHandling("Empty body", 400));
         // id from jwtCheck middleware (./admiAuthController)
         const id = req.admin.adminId;
         // if no password and confirmPassword on req.body
@@ -324,7 +324,7 @@ module.exports.forgetPassword = async (req, res, next) => {
             "code_expire": expire
         })
         // if update fails
-        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Error while forgetting password please try again later", 400));
+        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Something went wrong please try again later", 500));
         // message part
         const siteUrl = process.env.forgotUrlDoctor
         const message = forgotMessage(code, siteUrl)
@@ -376,7 +376,7 @@ module.exports.resetPassword = async (req, res, next) => {
             confirmPassword: undefined
         }, { new: true });
         // update fail
-        if (!update) return next(new errorHandling("Cannot update password try again", 400));
+        if (!update) return next(new errorHandling("Cannot update password try again", 500));
         // set code and code_expire to undefined
         dbCode.code_expire = undefined;
         dbCode.code = undefined

@@ -7,11 +7,11 @@ module.exports.checkingPatientAndData = async (req, res, next) => {
     try {
         //if user is not doctor throw error
         if (req.admin.role !== "doctor") {
-            return next(new errorHandling("You don't have enough permission to create a medical report", 400));
+            return next(new errorHandling("You don't have enough permission to create a medical report", 403));
         }
         //if the keys on req.body object is zero then throw error 
         if (Object.keys(req.body).length === 0) {
-            return next(new errorHandling("Empty body", 404));
+            return next(new errorHandling("Empty body", 400));
         }
         // if the req.originalUrl path matches 
         if (req.originalUrl.split("?")[0] === "/api/doctor/create-report") {
@@ -77,7 +77,7 @@ module.exports.createReport = async (req, res, next) => {
         const save = await medicalModel.create(upload);
         // failed to create medical report
         if (!save) {
-            return next(new errorHandling("Cannot create medical record", 400));
+            return next(new errorHandling("Cannot create medical record", 500));
         }
         // send sucess message
         res.status(200).json({
@@ -110,7 +110,7 @@ module.exports.updateReport = async (req, res, next) => {
         const save = await medicalModel.findByIdAndUpdate(req.query.medicalId, upload, { new: true });
         // if falis to update then throw error
         if (!save) {
-            return next(new errorHandling("Cannot update medical record", 400));
+            return next(new errorHandling("Cannot update medical record", 500));
         }
         // send sucess response
         res.status(200).json({
@@ -130,25 +130,22 @@ module.exports.updateReport = async (req, res, next) => {
 module.exports.deleteMedicalReport = async (req, res, next) => {
     try {
         // if user is root or admin then allow 
-        if (req.admin.role === "root" || req.admin.role === "admin") {
-            // destructruring the medicalId from req.body object
-            const { medicalId } = req.query;
-            // if there is no medicalId in the req.query object then throw error 
-            if (!medicalId) return next(new errorHandling("No medical id is given", 400));
-            // delete the medical record
-            const del = await medicalModel.findByIdAndDelete(medicalId);
-            // if the deletiion fails then throw error 
-            if (!del) return next(new errorHandling("Cannot delete medical report"), 400);
-            // send sucess resposne
-            res.status(200).json({
-                status: true,
-                message: "Medical report deleted sucessfully "
-            });
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to delete a medical record", 403));
+        // destructruring the medicalId from req.body object
+        const { medicalId } = req.query;
+        // if there is no medicalId in the req.query object then throw error 
+        if (!medicalId) return next(new errorHandling("No medical id is given", 400));
+        // delete the medical record
+        const del = await medicalModel.findByIdAndDelete(medicalId);
+        // if the deletiion fails then throw error 
+        if (!del) return next(new errorHandling("Cannot delete medical report"), 500);
+        // send sucess resposne
+        res.status(200).json({
+            status: true,
+            message: "Medical report deleted sucessfully "
+        });
 
-        } else {
-            // if user is not root or admin then throw error 
-            return next(new errorHandling("You donot have enough permission to delete a medical record", 400));
-        }
+
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
