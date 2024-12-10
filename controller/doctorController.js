@@ -15,7 +15,7 @@ module.exports.getDoctors = async (req, res, next) => {
         //fetch data
         const doctors = await doctorModel.find({}, "-__v -password -code_expire -code -role");//only fetch name email and role field
         // no details
-        if (!doctors) return next(new errorHandling("No doctor in database"), 404);
+        if (!doctors) return next(new errorHandling("No doctor record found in the database.", 404));
         //send resposnse
         res.status(200).json({
             status: true,
@@ -36,9 +36,9 @@ module.exports.getDoctors = async (req, res, next) => {
 module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
     try {
         //allow if the user is root or admin
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403));
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403));
         //check if there is query presented on URL
-        if (Object.keys(req.query).length <= 0) return next(new errorHandling("No query is given", 400));
+        if (Object.keys(req.query).length <= 0) return next(new errorHandling("Empty query: Ensure you're sending the correct information.", 400));
         let searching = {};//create empty object variable
         //if there is name on qurey
         if (req.query.name) searching["name"] = { $regex: req.query.name, $options: "i" };//case inscensitive and finds name similar to given input
@@ -47,7 +47,7 @@ module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
         // find detail
         const details = await doctorModel.find(searching, "-__v -password -code_expire -code -role");
         // no details
-        if (!details || details <= 0) return next(new errorHandling("No Doctor found", 404));
+        if (!details || details <= 0) return next(new errorHandling("No doctor record found in the database.", 404));
         // send response
         res.json({
             message: true,
@@ -65,10 +65,10 @@ module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
 module.exports.createDoctor = async (req, res, next) => {
     try {
         // allow only if user is root or admin
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403))
 
         // if body is empty
-        if (Object.keys(req.body).length <= 0) return next(new errorHandling("The body is empty", 400))
+        if (Object.keys(req.body).length <= 0) return next(new errorHandling(" Empty request body: Ensure you're sending the correct information.", 400))
         //list of fields
         let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword"];
         let upload = {}
@@ -82,16 +82,16 @@ module.exports.createDoctor = async (req, res, next) => {
         //create data on database
         const create = await doctorModel.create(upload);
         //data creation failed
-        if (!create) return next(new errorHandling("Cannot create doctor please try again", 500));
+        if (!create) return next(new errorHandling("Creation of doctor account was not successful. Please retry.", 500));
         //send success message
         res.status(200).json({
             status: true,
-            message: `${create.name} created sucessfully`
+            message: `${create.name} has been successfully created.`
 
         });
     } catch (error) {
         // this erorr code is for duplicate email
-        if (error.code === 11000) return next(new errorHandling("Email already exists", 400))
+        if (error.code === 11000) return next(new errorHandling("This email is already registered. Please use a different one.", 409))
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
@@ -102,10 +102,10 @@ module.exports.createDoctor = async (req, res, next) => {
 module.exports.modifyDoctor = async (req, res, next) => {
     try {
         //allow only if user is admin or root
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403))
 
         // if body is empty
-        if (Object.keys(req.body).length <= 0) return next(new errorHandling("The body is empty", 400))
+        if (Object.keys(req.body).length <= 0) return next(new errorHandling("Empty request body: Ensure you're sending the correct information.", 400))
         // listing the possible keys of object
         let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword"];
         let upload = {}
@@ -117,7 +117,7 @@ module.exports.modifyDoctor = async (req, res, next) => {
                 const email = await doctorModel.find({ "email": req.body.email }, "email");
                 // if there is email on database
 
-                if (Object.keys(email).length > 0) return next(new errorHandling("Email already exists", 400))
+                if (Object.keys(email).length > 0) return next(new errorHandling("This email is already registered. Please use a different one.", 409))
 
             }
         }
@@ -125,13 +125,13 @@ module.exports.modifyDoctor = async (req, res, next) => {
         if (req.body.password) {
             // password and confirmPassword doesnot match
             if (req.body.password !== req.body.confirmPassword) {
-                return next(new errorHandling("Passwords do not match with confirm password", 400));
+                return next(new errorHandling("The passwords do not match. Please check and try again.", 400));
             }
         }
         // id from URL
         const id = req.params.id
         // if no id is given on URL
-        if (!id) return next(new errorHandling("Please provide id of a doctor", 400))
+        if (!id) return next(new errorHandling("Empty id of doctor: Ensure you're sending the correct information.", 400))
         //iterate every key on req.body
         for (key in req.body) {
             // if key matched with the above list array
@@ -156,11 +156,11 @@ module.exports.modifyDoctor = async (req, res, next) => {
             }
         );
         // update fails
-        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Cannot update details", 500))
+        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Modification of doctor account was not successful. Please retry.", 500))
         // send response
         res.status(200).json({
             status: true,
-            message: `${Object.keys(upload).filter(key => key !== "confirmPassword").join(", ")} updated successfully`
+            message: `${Object.keys(upload).filter(key => key !== "confirmPassword").join(", ")} updated successfully.`
 
         })
 
@@ -180,18 +180,18 @@ module.exports.modifyDoctor = async (req, res, next) => {
 module.exports.deleteDoctor = async (req, res, next) => {
     try {
         //allow only if user is root or admin
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403))
         // id from url
         let id = req.params.id
         // deleting doctor
         let delDoctor = await doctorModel.findByIdAndDelete(id);
 
         // if no doctor by this id
-        if (!delDoctor || Object.keys(delDoctor).length <= 0) return next(new errorHandling("No doctor found by this id", 404))
+        if (!delDoctor || Object.keys(delDoctor).length <= 0) return next(new errorHandling("No doctor record found for the provided ID. Please check and try again.", 404))
         // send response
         res.status(200).json({
             status: true,
-            message: `${delDoctor.name} deleted sucessfully`
+            message: `${delDoctor.name} deleted sucessfully.`
         })
 
     } catch (error) {
@@ -214,18 +214,18 @@ module.exports.doctorLogin = async (req, res, next) => {
         // destructuring email and password from req.body
         const { email, password } = req.body
         // validate email
-        if (!emailValidation(email)) return next(new errorHandling("Please enter valid email address", 400))
+        if (!emailValidation(email)) return next(new errorHandling("The email address entered is invalid. Kindly correct it.", 400))
         // check email on database
         const doctor = await doctorModel.findOne({ email }, "name password role")
         // if no detais found by the email
-        if (!doctor || Object.keys(doctor).length <= 0) return next(new errorHandling("No doctor found by this email", 404))
+        if (!doctor || Object.keys(doctor).length <= 0) return next(new errorHandling("We couldn't find an doctor record matching this email. Please verify and try again.", 404))
         // store the password from database 
 
         const dbPassword = doctor.password
         // compare the user password and database password
         const isvalid = await bcrypt.compare(password, dbPassword)
         // if password is not valid
-        if (!isvalid) return next(new errorHandling("Password is incorrect", 400))
+        if (!isvalid) return next(new errorHandling("The password you entered is incorrect. Please try again.", 400))
         // create payload for jwt
         const payload = {
             adminId: doctor._id,
@@ -244,7 +244,7 @@ module.exports.doctorLogin = async (req, res, next) => {
         // send response
         return res.status(200).json({
             status: true,
-            message: `Hello ${doctor.name}`
+            message: `Hello, ${doctor.name}! Welcome back!`
         })
 
     } catch (error) {
@@ -260,17 +260,17 @@ module.exports.doctorLogin = async (req, res, next) => {
 module.exports.updateDoctor = async (req, res, next) => {
     try {
         // allow if the user is doctor
-        if (req.admin.role != "doctor") return next(new errorHandling("Only a doctor can perform this task", 403));
+        if (req.admin.role != "doctor") return next(new errorHandling("This task is restricted for authorized users only.", 403));
         // if the req.body is empty
-        if (Object.keys(req.body).length <= 0) return next(new errorHandling("Empty body", 400));
+        if (Object.keys(req.body).length <= 0) return next(new errorHandling("Empty request body: Ensure you're sending the correct information.", 400));
         // id from jwtCheck middleware (./admiAuthController)
         const id = req.admin.adminId;
         // if no password and confirmPassword on req.body
         if (!req.body.password || !req.body.confirmPassword) return next(new errorHandling("Password or confirmPassword is empty", 400));
         // check the password and confirmPassword
-        if (req.body.password !== req.body.confirmPassword) return next(new errorHandling("Password and confirm password doesnot match", 400));
+        if (req.body.password !== req.body.confirmPassword) return next(new errorHandling("Password and confirm password doesnot match.", 400));
         // check the length of password
-        if (req.body.password.length < 8) return next(new errorHandling("Password length must be atleast 8 character"), 400);
+        if (req.body.password.length < 8) return next(new errorHandling("Password length must be atleast 8 character."), 400);
 
         const modify = {};
         // hash password
@@ -288,7 +288,7 @@ module.exports.updateDoctor = async (req, res, next) => {
         });
 
         // if error occurs when updating data ie(no doctor found by the id) then send error
-        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("No doctor found by this id", 404));
+        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("No doctor record found for the provided ID. Please check and try again.", 500));
         // send sucess response
         res.status(200).json({
             status: true,
@@ -309,13 +309,13 @@ module.exports.forgetPassword = async (req, res, next) => {
         //destructure email from req.body
         const { email } = req.body;
         // email not found
-        if (!email) return next(new errorHandling("Enter email", 400));
+        if (!email) return next(new errorHandling("Empty email body: Ensure you're sending the correct information.", 400));
         // validate email
-        if (!emailValidation(email)) return next(new errorHandling("Enter valid email address", 400));
+        if (!emailValidation(email)) return next(new errorHandling("The email address entered is invalid. Kindly correct it.", 400));
         // check detail in db
         const checkDoctor = await doctorModel.findOne({ email }, "name")
         // no detail found
-        if (!checkDoctor || Object.keys(checkDoctor).length <= 0) return next(new errorHandling("No user found by this email", 404));
+        if (!checkDoctor || Object.keys(checkDoctor).length <= 0) return next(new errorHandling("We couldn't find an doctor record matching this email. Please verify and try again.", 404));
         const code = crypto.randomBytes(16).toString("hex"); // Generate a random code
         const expire = Date.now() + 10 * 60 * 1000; // Current time + 10 minutes in milliseconds
         // update document
@@ -324,7 +324,7 @@ module.exports.forgetPassword = async (req, res, next) => {
             "code_expire": expire
         })
         // if update fails
-        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Something went wrong please try again later", 500));
+        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Password reset link was not able to send to email. Please retry. ", 500));
         // message part
         const siteUrl = process.env.forgotUrlDoctor
         const message = forgotMessage(code, siteUrl)
@@ -333,7 +333,7 @@ module.exports.forgetPassword = async (req, res, next) => {
         // send response
         res.json({
             status: true,
-            message: "Password Code is sent to your email account.The code will expire after 10 minutes "
+            message: "Password reset link is sent to your email account.The link will expire after 10 minutes "
         })
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
@@ -350,23 +350,23 @@ module.exports.resetPassword = async (req, res, next) => {
         //code from url
         const { code } = req.params;
         // check if code is provided on url
-        if (!code || Object.keys(req.params).length <= 0) return next(new errorHandling("No token for resetting password", 400));
+        if (!code || Object.keys(req.params).length <= 0) return next(new errorHandling("Empty token params: Ensure you're sending the correct information.", 400));
         // destructuring password and confirmPassword from req.body object
         let { password, confirmPassword } = req.body;
         // if no password or confirm password the send error
-        if (!password || !confirmPassword) return next(new errorHandling("Confirm Password or password must match", 400));
+        if (!password || !confirmPassword) return next(new errorHandling("Empty password or confirm password body: Ensure you're sending the correct information.", 400));
         // if confirm password and password doesnot match
-        if (confirmPassword !== password) return next(new errorHandling("Confirm Password or password must match", 400));
+        if (confirmPassword !== password) return next(new errorHandling("The passwords do not match. Please check and try again.", 400));
         // check if code in database
         const dbCode = await doctorModel.findOne({ code }, "code_expire");
         // code not found
-        if (!dbCode || Object.keys(dbCode).length <= 0) return next(new errorHandling("Reset token is invalid or expire please try again", 404));
+        if (!dbCode || Object.keys(dbCode).length <= 0) return next(new errorHandling("Reset token is invalid or expired. Please try again.", 400));
         // if the expire code is less than current date
         if (dbCode.code_expire < Date.now()) {
             dbCode.code_expire = undefined;
             dbCode.code = undefined
             await dbCode.save()
-            return next(new errorHandling("Reset token is invalid or expire please try again", 404));
+            return next(new errorHandling("Reset token is invalid or expired.Please try again.", 400));
         }
         // hash the password
         const hashedPassword = bcrypt.hashSync(password, 10);
@@ -376,7 +376,7 @@ module.exports.resetPassword = async (req, res, next) => {
             confirmPassword: undefined
         }, { new: true });
         // update fail
-        if (!update) return next(new errorHandling("Cannot update password try again", 500));
+        if (!update) return next(new errorHandling("Updating the password was not successful. Please retry.", 500));
         // set code and code_expire to undefined
         dbCode.code_expire = undefined;
         dbCode.code = undefined
