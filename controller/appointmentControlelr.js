@@ -101,7 +101,7 @@ module.exports.approveAppointment = async (req, res, next) => {
         );
 
         // Notify the patient 
-        const message = approveMessage(updatedAppointment.patient_name, doctor.name, date, time)
+        const message = approveMessage(updatedAppointment.patient_name, doctor.name, date, time);
         const subject = "Appointment Approval Notification";
         const email = updatedAppointment.patient_email;
         const name = updatedAppointment.patient_name;
@@ -174,7 +174,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
         }
 
         // Prepare the email details
-        const message = rejectMessage(updatedAppointment.patient_name, checkDoctor.name, reason)
+        const message = rejectMessage(updatedAppointment.patient_name, checkDoctor.name, reason);
         const subject = "Appointment Approval Notification";
         const email = updatedAppointment.patient_email;
         const name = updatedAppointment.patient_name;
@@ -185,7 +185,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
         // Send success response
         res.status(200).json({
             status: true,
-            message: "Appointment rejected successfully and email is send to patient",
+            message: "Appointment rejected successfully and email is send to patient"
 
         });
     } catch (error) {
@@ -199,18 +199,15 @@ module.exports.rejectAppointment = async (req, res, next) => {
 //@desc:controller to delete appointment by the admin
 module.exports.deleteAppointment = async (req, res, next) => {
     try {
-        if (req.admin.role === "admin" || req.admin.role === "root") {
-            const { appointmentId } = req.query;
-            if (!appointmentId) return next(new errorHandling("No appointment id is given", 400));
-            const deleteAppointment = await appointmentModel.findByIdAndDelete(appointmentId);
-            if (!deleteAppointment) return next(new errorHandling("Failed to delete appointment", 404));
-            res.status(200).json({
-                status: true,
-                message: `${deleteAppointment.patient_name}'s appointment deleted sucessfully`
-            })
-        } else {
-            return next(new errorHandling("You donot have enough permisson to delete the appointment", 400));
-        }
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permisson to delete the appointment", 400));
+        const { appointmentId } = req.query;
+        if (!appointmentId) return next(new errorHandling("No appointment id is given", 400));
+        const deleteAppointment = await appointmentModel.findByIdAndDelete(appointmentId);
+        if (!deleteAppointment) return next(new errorHandling("Failed to delete appointment", 404));
+        res.status(200).json({
+            status: true,
+            message: `${deleteAppointment.patient_name}'s appointment deleted sucessfully`
+        });
 
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
@@ -224,11 +221,11 @@ module.exports.deleteAppointment = async (req, res, next) => {
 module.exports.viewAppointments = async (req, res, next) => {
     try {
         if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403));
-        const viewAppointments = await appointmentModel.find({}, "-id -__v");
-        if (!viewAppointments || Object.keys(viewAppointments).length <= 0) return next(new errorHandling("Donot have appointment on database", 404));
+        const viewAppointment = await appointmentModel.find({}, "-id -__v");
+        if (!viewAppointment || Object.keys(viewAppointment).length <= 0) return next(new errorHandling("There is no appointment on the database", 404));
         res.status(200).json({
             status: true,
-            appointments: viewAppointments
+            appointments: viewAppointment
         });
 
     } catch (error) {
