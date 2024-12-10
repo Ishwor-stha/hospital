@@ -17,19 +17,15 @@ module.exports.getAllPatient = async (req, res, next) => {
         if (!["root", "admin", "doctor"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403))
         const patientDetails = await patientModel.find({}, "-__v -password -code_expire -code");
         // no patient
-        if (!patientDetails || patientDetails <= 0) {
-            return next(new errorHandling("No patient record found in the database.", 404));
-        }
+        if (!patientDetails || patientDetails <= 0) return next(new errorHandling("No patient record found in the database.", 404));
+        
         // send responsne
         res.status(200).json({
             status: true,
             patientDetails
         });
 
-    } catch (error) {
-
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
 
@@ -60,9 +56,7 @@ module.exports.getPatientByPatientId = async (req, res, next) => {
 
 
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
 
@@ -153,9 +147,7 @@ module.exports.patientLogin = async (req, res, next) => {
             message: `Hello ${patient.name}`
         });
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 
@@ -168,7 +160,6 @@ module.exports.updatePatient = async (req, res, next) => {
         if (req.admin.role !== "patient") return next(new errorHandling("This task is restricted for authorized users only.", 403));
         if (!req.admin.adminId) return next(new errorHandling("Empty id : Ensure you're logged in. ", 400));
         const id = req.admin.adminId;
-
 
         // Ensure that request body is not empty
         if (Object.keys(req.body).length === 0) {
@@ -203,15 +194,10 @@ module.exports.updatePatient = async (req, res, next) => {
             }
 
             // Ensure that missing fields fall back to the existing database values
-            if (!updateEmergency.relationship) {
-                updateEmergency.relationship = dbEmergencyContact.relationship;
-            }
-            if (!updateEmergency.phone) {
-                updateEmergency.phone = dbEmergencyContact.phone;
-            }
-            if (!updateEmergency.name) {
-                updateEmergency.name = dbEmergencyContact.name;
-            }
+            if (!updateEmergency.relationship) updateEmergency.relationship = dbEmergencyContact.relationship;
+            if (!updateEmergency.phone)updateEmergency.phone = dbEmergencyContact.phone; 
+            if (!updateEmergency.name)updateEmergency.name = dbEmergencyContact.name;
+            
         }
 
         // Loop through the request body and update the patient details
@@ -225,13 +211,9 @@ module.exports.updatePatient = async (req, res, next) => {
             }
         }
         if (req.body.password) {
-            if (req.body.password != req.body.confirmPassword) {
-                return next(new errorHandling("The passwords do not match. Please check and try again.", 400));
-
-            } else {
-                updatedData["password"] = bcrypt.hashSync(req.body.password, 10)
-                updatedData["confirmPassword"] = undefined
-            }
+            if (req.body.password != req.body.confirmPassword)return next(new errorHandling("The passwords do not match. Please check and try again.", 400));
+                updatedData["password"] = bcrypt.hashSync(req.body.password, 10);
+                updatedData["confirmPassword"] = undefined;
 
         }
 
@@ -246,9 +228,7 @@ module.exports.updatePatient = async (req, res, next) => {
             data: updatedPatient
         });
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 };
 
 // @endpoint:localhost:3000/api/patient/delete-patient/:id
@@ -271,9 +251,7 @@ module.exports.deletePatient = async (req, res, next) => {
             stauts: true,
             message: `${deletePatient.name} deleted sucessfully.`
         });
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500)); }
 
 
 }
@@ -301,9 +279,7 @@ module.exports.getPatientByName = async (req, res, next) => {
             details
         });
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 //@endpoint:localhost:3000/api/patient/forget-password
@@ -340,9 +316,7 @@ module.exports.forgetPassword = async (req, res, next) => {
             status: true,
             message: "Password reset link is sent to your email account.The reset link will expire after 10 minutes "
         })
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 
@@ -392,7 +366,5 @@ module.exports.resetPassword = async (req, res, next) => {
         })
 
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }

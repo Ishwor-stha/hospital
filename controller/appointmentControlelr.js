@@ -38,9 +38,7 @@ module.exports.createAppointment = async (req, res, next) => {
             appointment_date: update.appointment_date,
         });
         // if there is duplicate appointments then send error
-        if (existingAppointment) {
-            return next(new errorHandling("Appointment already exists for the given date", 409));
-        }
+        if (existingAppointment)return next(new errorHandling("Appointment already exists for the given date", 409));
         // create appointment on database
         const create = await appointmentModel.create(update);
         // if creation fails then send error
@@ -50,9 +48,7 @@ module.exports.createAppointment = async (req, res, next) => {
             status: true,
             message: "Appointment created successfully wait for the response from doctor in email",
         });
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 //@endpoint:localhost:3000/api/doctor/approve-appointment
@@ -61,32 +57,22 @@ module.exports.createAppointment = async (req, res, next) => {
 module.exports.approveAppointment = async (req, res, next) => {
     try {
         // if the role is not doctor then throw error
-        if (!req.admin || req.admin.role !== "doctor") {
-            return next(new errorHandling("This task is restricted for authorized users only.", 403));
-        }
+        if (!req.admin || req.admin.role !== "doctor") return next(new errorHandling("This task is restricted for authorized users only.", 403));
 
         // if appointmentId is not passed on query then send error
-        if (!req.query.appointmentId) {
-            return next(new errorHandling("Empty appointment id  query: Ensure you're sending the correct information.", 400));
-        }
+        if (!req.query.appointmentId) return next(new errorHandling("Empty appointment id  query: Ensure you're sending the correct information.", 400));
         // destructuring date and time from req.body
         const { date, time } = req.body;
         // if no time and date is presented on req.body then send error
-        if (!time || !date) {
-            return next(new errorHandling("The time or date is missing. Please provide both to proceed", 400));
-        }
+        if (!time || !date) return next(new errorHandling("The time or date is missing. Please provide both to proceed", 400));
         // checking  the appointment is exists on database
         const appointment = await appointmentModel.findById(req.query.appointmentId);
         // if no appointment is on the database then throw error
-        if (!appointment) {
-            return next(new errorHandling("We couldn't find an appointment record matching this id. Please verify and try again.", 404));
-        }
+        if (!appointment) return next(new errorHandling("We couldn't find an appointment record matching this id. Please verify and try again.", 404));
         // check if doctor is present on database from id
         const doctor = await doctorModel.findById(req.admin.adminId, "name");
         // if no doctor is on the database then throw error
-        if (!doctor) {
-            return next(new errorHandling("We couldn't find an doctor record matching this id. Please verify and try again.", 404));
-        }
+        if (!doctor) return next(new errorHandling("We couldn't find an doctor record matching this id. Please verify and try again.", 404));
         // update the appointment status 
         const updatedAppointment = await appointmentModel.findByIdAndUpdate(
             req.query.appointmentId,
@@ -116,9 +102,7 @@ module.exports.approveAppointment = async (req, res, next) => {
             message: "Appointment approved successfully and email is send to the patient",
 
         });
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 };
 
 
@@ -132,17 +116,13 @@ module.exports.rejectAppointment = async (req, res, next) => {
         if (!req.admin || req.admin.role !== "doctor") return next(new errorHandling("This task is restricted for authorized users only.", 403));
 
         // If no appointmentId is given on the query, send an error
-        if (!req.query.appointmentId) {
-            return next(new errorHandling("Empty appointment id query: Ensure you're sending the correct information.", 400));
-        }
+        if (!req.query.appointmentId)return next(new errorHandling("Empty appointment id query: Ensure you're sending the correct information.", 400));
 
         // Destructure the reason key from req.body
         const { reason } = req.body;
 
         // If no reason is given in req.body, send an error
-        if (!reason) {
-            return next(new errorHandling("Rejection reason is required.", 400));
-        }
+        if (!reason) return next(new errorHandling("Rejection reason is required.", 400));
         const checkDoctor = await doctorModel.findById(req.admin.adminId, "name");
         if (!checkDoctor) return next(new errorHandling("No doctor record found for the provided ID. Please login  again.", 404));
 
@@ -150,9 +130,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
         const appointment = await appointmentModel.findById(req.query.appointmentId);
 
         // If no appointment is found in the database, send an error
-        if (!appointment) {
-            return next(new errorHandling("No appointment record found for the provided ID. Please check and try again.", 404));
-        }
+        if (!appointment) return next(new errorHandling("No appointment record found for the provided ID. Please check and try again.", 404));
 
         // Update the appointment status to "rejected"
         const updatedAppointment = await appointmentModel.findByIdAndUpdate(
@@ -184,9 +162,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
             message: "Appointment rejected successfully and email is send to patient"
 
         });
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 };
 
 
@@ -205,9 +181,7 @@ module.exports.deleteAppointment = async (req, res, next) => {
             message: `${deleteAppointment.patient_name}'s appointment deleted sucessfully.`
         });
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 
 }
 
@@ -224,9 +198,7 @@ module.exports.viewAppointments = async (req, res, next) => {
             appointments: viewAppointment
         });
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 //@endpoint:localhost:3000/api/doctor/view-appointment
 //@method:GET
@@ -243,10 +215,7 @@ module.exports.viewDoctorAppointment = async (req, res, next) => {
             appointment: view
 
         })
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 //@endpoint:localhost:3000/api/patient/view-appointment
 //@method:GET
@@ -263,10 +232,7 @@ module.exports.viewPatientAppointment = async (req, res, next) => {
             appointment: view
 
         })
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 

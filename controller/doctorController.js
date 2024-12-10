@@ -23,11 +23,7 @@ module.exports.getDoctors = async (req, res, next) => {
         })
 
 
-    } catch (error) {
-
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
-
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 
 }
 // @method:GET 
@@ -54,9 +50,7 @@ module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
             details
         })
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 // @method:POST 
@@ -117,7 +111,7 @@ module.exports.modifyDoctor = async (req, res, next) => {
                 const email = await doctorModel.find({ "email": req.body.email }, "email");
                 // if there is email on database
 
-                if (Object.keys(email).length > 0) return next(new errorHandling("This email is already registered. Please use a different one.", 409))
+                if (Object.keys(email).length > 0) return next(new errorHandling("This email is already registered. Please use a different one.", 409));
 
             }
         }
@@ -129,7 +123,7 @@ module.exports.modifyDoctor = async (req, res, next) => {
             }
         }
         // id from URL
-        const id = req.params.id
+        const id = req.params.id;
         // if no id is given on URL
         if (!id) return next(new errorHandling("Empty id of doctor: Ensure you're sending the correct information.", 400))
         //iterate every key on req.body
@@ -156,22 +150,15 @@ module.exports.modifyDoctor = async (req, res, next) => {
             }
         );
         // update fails
-        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Modification of doctor account was not successful. Please retry.", 500))
+        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Modification of doctor account was not successful. Please retry.", 500));
         // send response
         res.status(200).json({
             status: true,
             message: `${Object.keys(upload).filter(key => key !== "confirmPassword").join(", ")} updated successfully.`
 
-        })
+        });
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-
-
-    }
-
-
-
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
 // @method:DELETE
@@ -194,9 +181,7 @@ module.exports.deleteDoctor = async (req, res, next) => {
             message: `${delDoctor.name} deleted sucessfully.`
         })
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 
@@ -208,24 +193,22 @@ module.exports.doctorLogin = async (req, res, next) => {
         //extract all keys presented on req.body object
         const keys = Object.keys(req.body)
         // if no keys length is not equal to 2 or key is not email or  password then send error
-        if (keys.length !== 2 || !keys.includes('email') || !keys.includes('password')) {
-            return next(new errorHandling("Request body must only contain 'email' and 'password'", 400))
-        }
+        if (keys.length !== 2 || !keys.includes('email') || !keys.includes('password'))return next(new errorHandling("Request body must only contain 'email' and 'password'", 400));
         // destructuring email and password from req.body
-        const { email, password } = req.body
+        const { email, password } = req.body;
         // validate email
-        if (!emailValidation(email)) return next(new errorHandling("The email address entered is invalid. Kindly correct it.", 400))
+        if (!emailValidation(email)) return next(new errorHandling("The email address entered is invalid. Kindly correct it.", 400));
         // check email on database
-        const doctor = await doctorModel.findOne({ email }, "name password role")
+        const doctor = await doctorModel.findOne({ email }, "name password role");
         // if no detais found by the email
-        if (!doctor || Object.keys(doctor).length <= 0) return next(new errorHandling("We couldn't find an doctor record matching this email. Please verify and try again.", 404))
+        if (!doctor || Object.keys(doctor).length <= 0) return next(new errorHandling("We couldn't find an doctor record matching this email. Please verify and try again.", 404));
         // store the password from database 
 
         const dbPassword = doctor.password
         // compare the user password and database password
         const isvalid = await bcrypt.compare(password, dbPassword)
         // if password is not valid
-        if (!isvalid) return next(new errorHandling("The password you entered is incorrect. Please try again.", 400))
+        if (!isvalid) return next(new errorHandling("The password you entered is incorrect. Please try again.", 400));
         // create payload for jwt
         const payload = {
             adminId: doctor._id,
@@ -245,11 +228,9 @@ module.exports.doctorLogin = async (req, res, next) => {
         return res.status(200).json({
             status: true,
             message: `Hello, ${doctor.name}! Welcome back!`
-        })
+        });
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 
@@ -271,7 +252,6 @@ module.exports.updateDoctor = async (req, res, next) => {
         if (req.body.password !== req.body.confirmPassword) return next(new errorHandling("Password and confirm password doesnot match.", 400));
         // check the length of password
         if (req.body.password.length < 8) return next(new errorHandling("Password length must be atleast 8 character."), 400);
-
         const modify = {};
         // hash password
         const hashPassword = bcrypt.hashSync(req.body.password, 10);
@@ -293,11 +273,8 @@ module.exports.updateDoctor = async (req, res, next) => {
         res.status(200).json({
             status: true,
             message: `Password updated sucessfully`
-        })
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-
-    }
+        });
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 
@@ -335,9 +312,7 @@ module.exports.forgetPassword = async (req, res, next) => {
             status: true,
             message: "Password reset link is sent to your email account.The link will expire after 10 minutes "
         })
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 
@@ -388,7 +363,5 @@ module.exports.resetPassword = async (req, res, next) => {
         })
 
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }

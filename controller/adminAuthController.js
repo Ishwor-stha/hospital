@@ -14,22 +14,15 @@ module.exports.checkJwt = (req, res, next) => {
         // token form client browser
         const token = req.cookies.auth_token;
         // no token
-        if (!token) {
-            return next(new errorHandling("Please login first!", 403));
-
-        }
+        if (!token)return next(new errorHandling("Please login first!", 403));
         // check token
         jwt.verify(token, process.env.jwtSecretKey, (err, decode) => {
-            if (err) {
-                return next(new errorHandling("Your Session Expired or invalid token given.Please login again!", 400));
-            }
+            if (err) return next(new errorHandling("Your Session Expired or invalid token given.Please login again!", 400));
             req.admin = decode;
 
             next();
         })
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 };
 
 
@@ -48,9 +41,7 @@ module.exports.getAdmin = async (req, res, next) => {
             status: true,
             admins
         });
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 //@endpoint:localhost:3000/api/admin/create-admin
@@ -82,9 +73,7 @@ module.exports.createAdmin = async (req, res, next) => {
             status: true,
             message: `Admin creation complete: '${upload.name}' has been successfully registered.`
         });
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 
 }
 
@@ -97,9 +86,8 @@ module.exports.adminLogin = async (req, res, next) => {
         // extract all keys from req.body on array
         const keys = Object.keys(req.body);
         // if the key length is not equal to 2 or the key is not email and password then send error
-        if (keys.length !== 2 || !keys.includes('email') || !keys.includes('password')) {
-            return next(new errorHandling("Request body must only contain 'email' and 'password'", 400));
-        }
+        if (keys.length !== 2 || !keys.includes('email') || !keys.includes('password')) return next(new errorHandling("Request body must only contain 'email' and 'password'", 400));
+        
         // destructring the req.body 
         const { email, password } = req.body;
         // validate the email
@@ -137,9 +125,7 @@ module.exports.adminLogin = async (req, res, next) => {
             message: `Hello, ${admin.name}! Welcome back!`
         });
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 //@endpoint:localhost:3000/api/admin/logout-admin
@@ -159,9 +145,7 @@ module.exports.logoutAdmin = (req, res, next) => {
             status: true,
             message: "You've been logged out. Thanks for visiting!",
         });
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 };
 
 
@@ -186,10 +170,7 @@ module.exports.deleteAdmin = async (req, res, next) => {
             status: true,
             message: `${del.name} has been successfully deleted.`
         });
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 //@endpoint:localhost:3000/api/admin/update-admin
@@ -198,21 +179,16 @@ module.exports.deleteAdmin = async (req, res, next) => {
 module.exports.updateAdmin = async (req, res, next) => {
     try {
         // if no req.body
-        if (!req.body || Object.keys(req.body).length === 0) {
-            return next(new errorHandling("Empty request body: Ensure you're sending the correct information.", 400));
-        }
+        if (!req.body || Object.keys(req.body).length === 0)return next(new errorHandling("Empty request body: Ensure you're sending the correct information.", 400));
         const id = req.admin.adminId; // `id` is passed from checkjwt middleware
-        if (!id) {
-            return next(new errorHandling("Empty id parameter: Ensure you're logged in.", 400));
-        }
+        if (!id)return next(new errorHandling("Empty id parameter: Ensure you're logged in.", 400));
         // array of possible fields
         const inputFields = ["name", "password", "confirmPassword", "email"];
         const upload = {};
         // Validate password and confirmPassword match (if provided)
         if (req.body.password) {
-            if (req.body.password !== req.body.confirmPassword) {
-                return next(new errorHandling("The passwords do not match. Please check and try again.", 400));
-            }
+            if (req.body.password !== req.body.confirmPassword) return next(new errorHandling("The passwords do not match. Please check and try again.", 400));
+            
         }
 
         // Filter valid fields from the request body
@@ -235,9 +211,7 @@ module.exports.updateAdmin = async (req, res, next) => {
             runValidators: true // Run schema validators
         });
 
-        if (!update) {
-            return next(new errorHandling("No admin record found for the provided ID. Please check and try again.", 404));
-        }
+        if (!update)return next(new errorHandling("No admin record found for the provided ID. Please check and try again.", 404));
 
         // send sucess response
         res.status(200).json({
@@ -245,9 +219,7 @@ module.exports.updateAdmin = async (req, res, next) => {
             message: `${Object.keys(upload).filter(key => key !== "confirmPassword").join(", ")} updated successfully`
 
         });
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 };
 
 //@endpoint:localhost:3000/api/admin/update-admin-root/:id
@@ -313,9 +285,7 @@ module.exports.updateAdminByRoot = async (req, res, next) => {
         });
 
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 
@@ -354,9 +324,7 @@ module.exports.forgetPassword = async (req, res, next) => {
             status: true,
             message: "The password reset link is sent to your email account.The code will expire after 10 minutes "
         })
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 
 //@endpoint:localhost:3000/api/admin/reset-password/:code
@@ -405,7 +373,5 @@ module.exports.resetPassword = async (req, res, next) => {
         });
 
 
-    } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500));
-    }
+    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
