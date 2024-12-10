@@ -12,11 +12,11 @@ const { approveMessage, rejectMessage } = require("../utils/message")
 //@desc:controller to create appointment by the patients 
 module.exports.createAppointment = async (req, res, next) => {
     try {
-        if (req.admin.role !== "patient") return next(new errorHandling("Only patient are allowed to book appointment", 403));
+        if (req.admin.role !== "patient") return next(new errorHandling("This task is restricted for authorized users only.", 403));
         // if body is empty then send error
-        if (Object.keys(req.body).length === 0) return next(new errorHandling("Empty body", 400));
+        if (Object.keys(req.body).length === 0) return next(new errorHandling("Empty request body: Ensure you're sending the correct information.", 400));
         // if no doctorId is given in query
-        if (!req.query.doctorId) return next(new errorHandling("No doctor ID is given in query", 400));
+        if (!req.query.doctorId) return next(new errorHandling("Empty id query: Ensure you're sending the correct information.", 400));
         // list only allowed fields
         const allowedFields = ["patient_name", "patient_email", "patient_phone", "appointment_date", "reason"];
         const update = {};
@@ -44,7 +44,7 @@ module.exports.createAppointment = async (req, res, next) => {
         // create appointment on database
         const create = await appointmentModel.create(update);
         // if creation fails then send error
-        if (!create) return next(new errorHandling("Cannot create an appointment", 500));
+        if (!create) return next(new errorHandling("Creation of appointment was not successful. Please retry.", 500));
         // send suucess response
         res.status(200).json({
             status: true,
@@ -62,30 +62,30 @@ module.exports.approveAppointment = async (req, res, next) => {
     try {
         // if the role is not doctor then throw error
         if (!req.admin || req.admin.role !== "doctor") {
-            return next(new errorHandling("You do not have permission to approve appointments", 403));
+            return next(new errorHandling("This task is restricted for authorized users only.", 403));
         }
 
         // if appointmentId is not passed on query then send error
         if (!req.query.appointmentId) {
-            return next(new errorHandling("Appointment ID is missing", 400));
+            return next(new errorHandling("Empty appointment id  query: Ensure you're sending the correct information.", 400));
         }
         // destructuring date and time from req.body
         const { date, time } = req.body;
         // if no time and date is presented on req.body then send error
         if (!time || !date) {
-            return next(new errorHandling("Time or date is missing", 400));
+            return next(new errorHandling("The time or date is missing. Please provide both to proceed", 400));
         }
         // checking  the appointment is exists on database
         const appointment = await appointmentModel.findById(req.query.appointmentId);
         // if no appointment is on the database then throw error
         if (!appointment) {
-            return next(new errorHandling("Appointment not found", 404));
+            return next(new errorHandling("We couldn't find an appointment record matching this id. Please verify and try again.", 404));
         }
         // check if doctor is present on database from id
         const doctor = await doctorModel.findById(req.admin.adminId, "name");
         // if no doctor is on the database then throw error
         if (!doctor) {
-            return next(new errorHandling("Doctor not found", 404));
+            return next(new errorHandling("We couldn't find an doctor record matching this id. Please verify and try again.", 404));
         }
         // update the appointment status 
         const updatedAppointment = await appointmentModel.findByIdAndUpdate(
@@ -129,13 +129,11 @@ module.exports.approveAppointment = async (req, res, next) => {
 module.exports.rejectAppointment = async (req, res, next) => {
     try {
         // Check if the user is a doctor
-        if (!req.admin || req.admin.role !== "doctor") {
-            return next(new errorHandling("You do not have permission to reject appointments", 403));
-        }
+        if (!req.admin || req.admin.role !== "doctor") return next(new errorHandling("This task is restricted for authorized users only.", 403));
 
         // If no appointmentId is given on the query, send an error
         if (!req.query.appointmentId) {
-            return next(new errorHandling("Appointment ID is missing", 400));
+            return next(new errorHandling("Empty appointment id query: Ensure you're sending the correct information.", 400));
         }
 
         // Destructure the reason key from req.body
@@ -143,17 +141,17 @@ module.exports.rejectAppointment = async (req, res, next) => {
 
         // If no reason is given in req.body, send an error
         if (!reason) {
-            return next(new errorHandling("Rejection reason is required", 400));
+            return next(new errorHandling("Rejection reason is required.", 400));
         }
         const checkDoctor = await doctorModel.findById(req.admin.adminId, "name");
-        if (!checkDoctor) return next(new errorHandling("No doctor is found by this id", 404));
+        if (!checkDoctor) return next(new errorHandling("No doctor record found for the provided ID. Please login  again.", 404));
 
         // Find the appointment
         const appointment = await appointmentModel.findById(req.query.appointmentId);
 
         // If no appointment is found in the database, send an error
         if (!appointment) {
-            return next(new errorHandling("Appointment not found", 404));
+            return next(new errorHandling("No appointment record found for the provided ID. Please check and try again.", 404));
         }
 
         // Update the appointment status to "rejected"
@@ -169,9 +167,7 @@ module.exports.rejectAppointment = async (req, res, next) => {
         );
 
         // If updating the appointment fails
-        if (!updatedAppointment) {
-            return next(new errorHandling("Failed to reject the appointment", 400));
-        }
+        if (!updatedAppointment)return next(new errorHandling("Unable to decline the appointment.", 500));
 
         // Prepare the email details
         const message = rejectMessage(updatedAppointment.patient_name, checkDoctor.name, reason);
@@ -199,14 +195,14 @@ module.exports.rejectAppointment = async (req, res, next) => {
 //@desc:controller to delete appointment by the admin
 module.exports.deleteAppointment = async (req, res, next) => {
     try {
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permisson to delete the appointment", 400));
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 400));
         const { appointmentId } = req.query;
-        if (!appointmentId) return next(new errorHandling("No appointment id is given", 400));
+        if (!appointmentId) return next(new errorHandling("Empty appointment id query: Ensure you're sending the correct information.", 400));
         const deleteAppointment = await appointmentModel.findByIdAndDelete(appointmentId);
-        if (!deleteAppointment) return next(new errorHandling("Failed to delete appointment", 404));
+        if (!deleteAppointment) return next(new errorHandling("Deletiion of appointment  was not successful. Please retry.", 500));
         res.status(200).json({
             status: true,
-            message: `${deleteAppointment.patient_name}'s appointment deleted sucessfully`
+            message: `${deleteAppointment.patient_name}'s appointment deleted sucessfully.`
         });
 
     } catch (error) {
@@ -220,9 +216,9 @@ module.exports.deleteAppointment = async (req, res, next) => {
 //@desc:controller to view appointment by the admin
 module.exports.viewAppointments = async (req, res, next) => {
     try {
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("You donot have enough permission to perform this task", 403));
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403));
         const viewAppointment = await appointmentModel.find({}, "-id -__v");
-        if (!viewAppointment || Object.keys(viewAppointment).length <= 0) return next(new errorHandling("There is no appointment on the database", 404));
+        if (!viewAppointment || Object.keys(viewAppointment).length <= 0) return next(new errorHandling("No appointment record found in the database.", 404));
         res.status(200).json({
             status: true,
             appointments: viewAppointment
@@ -237,11 +233,11 @@ module.exports.viewAppointments = async (req, res, next) => {
 //@desc:controller to view appointment by the docotor
 module.exports.viewDoctorAppointment = async (req, res, next) => {
     try {
-        if (req.admin.role !== "doctor") return next(new errorHandling("You donot have enough permission to view ", 403));
+        if (req.admin.role !== "doctor") return next(new errorHandling("This task is restricted for authorized users only. ", 403));
         const doctorId = req.admin.adminId;
-        if (!doctorId) return next(new errorHandling("No doctor id is given ", 400));
+        if (!doctorId) return next(new errorHandling("Empty doctor id : Ensure you're logged in. ", 400));
         const view = await appointmentModel.find({ "doctor_id": doctorId }, "-doctor_id -__v");
-        if (!view || Object.keys(view).length <= 0) return next(new errorHandling("No appointment found", 404));
+        if (!view || Object.keys(view).length <= 0) return next(new errorHandling("No appointment record found in the database.", 404));
         res.status(200).json({
             status: true,
             appointment: view
@@ -257,11 +253,11 @@ module.exports.viewDoctorAppointment = async (req, res, next) => {
 //@desc:controller to view appointment by the patient
 module.exports.viewPatientAppointment = async (req, res, next) => {
     try {
-        if (req.admin.role !== "patient") return next(new errorHandling("You donot have enough permission to view ", 403));
+        if (req.admin.role !== "patient") return next(new errorHandling("This task is restricted for authorized users only.", 403));
         const patientId = req.admin.adminId;
-        if (!patientId) return next(new errorHandling("No patient id is given ", 400));
+        if (!patientId) return next(new errorHandling("Empty patient id : Ensure you're logged in.", 400));
         const view = await appointmentModel.find({ "patient_id": patientId }, "-patient_id -__v");
-        if (!view || Object.keys(view).length <= 0) return next(new errorHandling("No appointment found", 404));
+        if (!view || Object.keys(view).length <= 0) return next(new errorHandling("No appointment record found in the database.", 404));
         res.status(200).json({
             status: true,
             appointment: view
