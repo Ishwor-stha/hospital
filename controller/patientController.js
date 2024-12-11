@@ -139,12 +139,11 @@ module.exports.patientLogin = async (req, res, next) => {
             expires: new Date(Date.now() + 3600000), // Cookie expires in 1 hour
             sameSite: "Strict" // Restricts the cookie to same-site requests (prevents CSRF attacks)
         });
-
         // send sucess message
 
         return res.status(200).json({
             status: true,
-            message: `Hello ${patient.name}`
+            message: `Hi ${patient.name}, it's great to see you!`
         });
 
     } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500));}
