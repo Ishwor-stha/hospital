@@ -8,13 +8,7 @@ const { forgotMessage } = require("../utils/forgetMessage");
 const sendMail = require("../utils/sendMail")
 const fs = require('fs');
 const path = require("path")
-
-const deleteImage = (fileName) => {
-    const rootPath = path.dirname(require.main.filename);
-    const deletePath = `${rootPath}/${fileName}`
-    fs.rmSync(deletePath);
-
-}
+const {deleteImage}=require("../utils/deleteImage")
 
 // @method:GET 
 // @endpoint:localhost:3000/api/admin/get-doctors
@@ -400,7 +394,7 @@ module.exports.resetPassword = async (req, res, next) => {
             confirmPassword: undefined
         }, { new: true });
         // update fail
-        if (!update) return next(new errorHandling("Updating the password was not successful. Please retry.", 500));
+        if (!update) return next(new errorHandling("Updating the password was not successful. Please retry again.", 500));
         // set code and code_expire to undefined
         dbCode.code_expire = undefined;
         dbCode.code = undefined
