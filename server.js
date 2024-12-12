@@ -1,5 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const path=require("path");
 const doctorRoute = require("./routes/doctorRoute");
 const dbConnection = require("./utils/mongodb");
 const errorController = require("./controller/errorController");
@@ -32,6 +33,8 @@ const limiter = rateLimit({
 // Initialize the Express app
 const app = express();
 dotenv.config();
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Use middlewares
 app.use(limiter);  // Rate-limiting middleware

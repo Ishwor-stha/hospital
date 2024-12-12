@@ -72,7 +72,7 @@ module.exports.postPatient = async (req, res, next) => {
         if (req.body.email) if (!emailValidation(req.body.email)) return next(new errorHandling("The email address entered is invalid. Kindly correct it.", 400)); // email validation            
 
         // list all possible keys
-        let patientDetails = ["name", "dob", "gender", "phone", "email", "address", "emergency_contact", "password", "confirmPassword"];
+        let patientDetails = ["name", "dob", "gender", "phone", "email", "address", "emergency_contact", "password", "confirmPassword","photo"];
         let toBeUpload = {};
         // iterate through req.body
         for (key in req.body) {
@@ -172,7 +172,7 @@ module.exports.updatePatient = async (req, res, next) => {
             if (Object.keys(check).length > 0) return next(new errorHandling("This email is already registered. Please use a different one.", 409));
         }
         // possible keys
-        let patientDetails = ["name", "dob", "gender", "phone", "email", "address", "emergency_contact", "password", "confirmPassword"];
+        let patientDetails = ["name", "dob", "gender", "phone", "email", "address", "emergency_contact", "password", "confirmPassword","photo"];
         let updatedData = {};
         let updateEmergency = {};
 

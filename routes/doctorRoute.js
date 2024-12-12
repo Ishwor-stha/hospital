@@ -1,8 +1,8 @@
 const express = require("express");
 const { doctorLogin, updateDoctor, getDoctors, forgetPassword, resetPassword } = require("../controller/doctorController.js");
 const { checkJwt } = require("../controller/adminAuthController.js");
-const { checkingPatientAndData, createReport, updateReport, viewSpecificMedicalReport } = require("../controller/medicalController.js")
-const { approveAppointment, rejectAppointment, viewDoctorAppointment } = require("../controller/appointmentControlelr.js")
+const { checkingPatientAndData, createReport, updateReport, viewSpecificMedicalReport } = require("../controller/medicalController.js");
+const { approveAppointment, rejectAppointment, viewDoctorAppointment } = require("../controller/appointmentControlelr.js");
 
 const Router = express.Router();
 
@@ -14,7 +14,7 @@ Router.route("/reset-password/:code").patch(resetPassword)
 
 Router.route("/update-doctor").patch(checkJwt, updateDoctor);
 
-Router.route("/create-report").post(checkJwt, checkingPatientAndData, createReport);
+Router.route("/create-report").post(checkJwt, checkingPatientAndData,createReport);
 
 Router.route("/view-report").get(checkJwt, viewSpecificMedicalReport)
 

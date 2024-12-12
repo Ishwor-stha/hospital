@@ -2,6 +2,8 @@ const { getAdmin, createAdmin, adminLogin, checkJwt, logoutAdmin, deleteAdmin, u
 const { createDoctor, modifyDoctor, deleteDoctor, getDoctors, getDoctorByPhoneOrName } = require("../controller/doctorController");
 const { deleteMedicalReport, viewMedicalReport } = require("../controller/medicalController");
 const { deleteAppointment, viewAppointments } = require("../controller/appointmentControlelr");
+const{upload}=require("../utils/imageHandling");
+
 
 
 const Router = require("express").Router();
@@ -24,9 +26,9 @@ Router.route("/update-admin-root/:id").patch(checkJwt, updateAdminByRoot);
 
 Router.route("/get-doctorByID").get(checkJwt, getDoctorByPhoneOrName);
 
-Router.route("/create-doctor").post(checkJwt, createDoctor);
+Router.route("/create-doctor").post(checkJwt,upload.single('photo'), createDoctor);
 
-Router.route("/update-doctor/:id").patch(checkJwt, modifyDoctor);
+Router.route("/update-doctor/:id").patch(checkJwt,upload.single('photo'), modifyDoctor);
 
 Router.route("/delete-doctor/:id").delete(checkJwt, deleteDoctor);
 

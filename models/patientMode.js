@@ -93,6 +93,9 @@ const patientSchema = mongoose.Schema({
         enum: "patient",
         default: "patient"
     },
+    photo: {
+        type: String
+    },
 
     // Date of Registration (automatically generated)
     registration_date: {

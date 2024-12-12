@@ -6,6 +6,8 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto")
 const { forgotMessage } = require("../utils/forgetMessage");
 const sendMail = require("../utils/sendMail")
+const fs = require('fs');
+const path = require("path")
 
 // @method:GET 
 // @endpoint:localhost:3000/api/admin/get-doctors
@@ -23,7 +25,7 @@ module.exports.getDoctors = async (req, res, next) => {
         })
 
 
-    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
+    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 
 }
 // @method:GET 
@@ -50,7 +52,7 @@ module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
             details
         })
 
-    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
+    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
 // @method:POST 
@@ -64,7 +66,7 @@ module.exports.createDoctor = async (req, res, next) => {
         // if body is empty
         if (Object.keys(req.body).length <= 0) return next(new errorHandling(" Empty request body: Ensure you're sending the correct information.", 400))
         //list of fields
-        let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword"];
+        let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword", "photo"];
         let upload = {}
         //filter only fields which are presented on list array
         for (key in req.body) {
@@ -73,17 +75,31 @@ module.exports.createDoctor = async (req, res, next) => {
                 upload[key] = req.body[key];
             }
         }
+        if (req.file) {
+            upload["photo"] = req.file.path;
+        } else {
+            return next(new errorHandling("No photo uploaded. Please upload a photo.", 400));
+        }
         //create data on database
         const create = await doctorModel.create(upload);
         //data creation failed
-        if (!create) return next(new errorHandling("Creation of doctor account was not successful. Please retry.", 500));
+        if (!create) {
+            const rootPath = path.dirname(require.main.filename);
+            const deletePath=`${rootPath}/${req.file.path}`
+            fs.rmSync(deletePath);
+            return next(new errorHandling("Creation of doctor account was not successful. Please retry.", 500));
+        }
+        
         //send success message
         res.status(200).json({
             status: true,
             message: `${create.name} has been successfully created.`
-
+        
         });
     } catch (error) {
+        const rootPath = path.dirname(require.main.filename);
+        const deletePath=`${rootPath}/${req.file.path}`
+        fs.rmSync(deletePath);
         // this erorr code is for duplicate email
         if (error.code === 11000) return next(new errorHandling("This email is already registered. Please use a different one.", 409))
         return next(new errorHandling(error.message, error.statusCode || 500));
@@ -96,12 +112,16 @@ module.exports.createDoctor = async (req, res, next) => {
 module.exports.modifyDoctor = async (req, res, next) => {
     try {
         //allow only if user is admin or root
+    
         if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403))
-
+        let photoPath = null;
+        if (req.file) {
+            photoPath = req.file.path; // Store the photo path 
+        }
         // if body is empty
-        if (Object.keys(req.body).length <= 0) return next(new errorHandling("Empty request body: Ensure you're sending the correct information.", 400))
+        if (Object.keys(req.body).length <= 0 && !photoPath) return next(new errorHandling("Empty request body: Ensure you're sending the correct information.", 400))
         // listing the possible keys of object
-        let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword"];
+        let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword", "photo"];
         let upload = {}
         // if req.body contain email
         if (req.body.email) {
@@ -142,6 +162,22 @@ module.exports.modifyDoctor = async (req, res, next) => {
 
             }
         }
+        // Process photo
+        if (photoPath) {
+            upload["photo"] = photoPath; // Assign new photo path to upload object
+
+            const doctor = await doctorModel.findById(id, "photo"); // Fetch current doctor photo path
+            if (doctor && doctor.photo) {
+                const rootPath = path.dirname(require.main.filename); // Base directory of the app
+                const oldPhotoPath = path.join(rootPath, doctor.photo);
+
+                // Remove old photo
+                fs.rm(oldPhotoPath, (err) => {
+                    if (err) console.error("Failed to delete old photo:", err);
+                });
+            }
+        }
+
         // update the details on database
         const update = await doctorModel.findByIdAndUpdate(id, upload,
             {
@@ -149,6 +185,7 @@ module.exports.modifyDoctor = async (req, res, next) => {
                 runValidators: true // Run schema validators
             }
         );
+
         // update fails
         if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Modification of doctor account was not successful. Please retry.", 500));
         // send response
@@ -158,7 +195,7 @@ module.exports.modifyDoctor = async (req, res, next) => {
 
         });
 
-    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500)); }
+    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
 // @method:DELETE
@@ -181,7 +218,7 @@ module.exports.deleteDoctor = async (req, res, next) => {
             message: `${delDoctor.name} deleted sucessfully.`
         })
 
-    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
+    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
 
@@ -193,7 +230,7 @@ module.exports.doctorLogin = async (req, res, next) => {
         //extract all keys presented on req.body object
         const keys = Object.keys(req.body)
         // if no keys length is not equal to 2 or key is not email or  password then send error
-        if (keys.length !== 2 || !keys.includes('email') || !keys.includes('password'))return next(new errorHandling("Request body must only contain 'email' and 'password'", 400));
+        if (keys.length !== 2 || !keys.includes('email') || !keys.includes('password')) return next(new errorHandling("Request body must only contain 'email' and 'password'", 400));
         // destructuring email and password from req.body
         const { email, password } = req.body;
         // validate email
@@ -230,7 +267,7 @@ module.exports.doctorLogin = async (req, res, next) => {
             message: `Hello, ${doctor.name}! Welcome back!`
         });
 
-    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
+    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
 
@@ -274,7 +311,7 @@ module.exports.updateDoctor = async (req, res, next) => {
             status: true,
             message: `Password updated sucessfully`
         });
-    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
+    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
 
@@ -312,7 +349,7 @@ module.exports.forgetPassword = async (req, res, next) => {
             status: true,
             message: "Password reset link is sent to your email account.The link will expire after 10 minutes "
         })
-    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
+    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
 
@@ -363,5 +400,5 @@ module.exports.resetPassword = async (req, res, next) => {
         })
 
 
-    } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
+    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 }

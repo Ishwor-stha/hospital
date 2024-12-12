@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const emailValidation = require("../utils/emailValidation");
 const bcrypt = require("bcryptjs");
-const errorHandling=require("../utils/errorHandling");
+const errorHandling = require("../utils/errorHandling");
 
 // Define the Doctor Schema
 const doctorSchema = mongoose.Schema({
@@ -86,6 +86,9 @@ const doctorSchema = mongoose.Schema({
             message: "Passwords must match",
         },
     },
+    photo: {
+        type: String
+    },
 
     role: {
         type: String,
@@ -111,7 +114,7 @@ doctorSchema.pre("save", async function (next) {
 
         next();
     } catch (error) {
-        next(new errorHandling(error.message,error.statusCode ||500));
+        next(new errorHandling(error.message, error.statusCode || 500));
     }
 });
 
