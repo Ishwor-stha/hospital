@@ -9,6 +9,13 @@ const sendMail = require("../utils/sendMail")
 const fs = require('fs');
 const path = require("path")
 
+const deleteImage = (fileName) => {
+    const rootPath = path.dirname(require.main.filename);
+    const deletePath = `${rootPath}/${fileName}`
+    fs.rmSync(deletePath);
+
+}
+
 // @method:GET 
 // @endpoint:localhost:3000/api/admin/get-doctors
 // @desc:Controller to get all doctor presented on database
@@ -84,22 +91,19 @@ module.exports.createDoctor = async (req, res, next) => {
         const create = await doctorModel.create(upload);
         //data creation failed
         if (!create) {
-            const rootPath = path.dirname(require.main.filename);
-            const deletePath=`${rootPath}/${req.file.path}`
-            fs.rmSync(deletePath);
+            deleteImage(req.file.path);
             return next(new errorHandling("Creation of doctor account was not successful. Please retry.", 500));
         }
-        
+
         //send success message
         res.status(200).json({
             status: true,
             message: `${create.name} has been successfully created.`
-        
+
         });
     } catch (error) {
-        const rootPath = path.dirname(require.main.filename);
-        const deletePath=`${rootPath}/${req.file.path}`
-        fs.rmSync(deletePath);
+
+        deleteImage(req.file.path);
         // this erorr code is for duplicate email
         if (error.code === 11000) return next(new errorHandling("This email is already registered. Please use a different one.", 409))
         return next(new errorHandling(error.message, error.statusCode || 500));
@@ -112,7 +116,7 @@ module.exports.createDoctor = async (req, res, next) => {
 module.exports.modifyDoctor = async (req, res, next) => {
     try {
         //allow only if user is admin or root
-    
+
         if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403))
         let photoPath = null;
         if (req.file) {
@@ -185,9 +189,13 @@ module.exports.modifyDoctor = async (req, res, next) => {
                 runValidators: true // Run schema validators
             }
         );
-
         // update fails
-        if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Modification of doctor account was not successful. Please retry.", 500));
+        if (!update || Object.keys(update).length <= 0) {
+
+            deleteImage(req.file.path);
+
+            return next(new errorHandling("Modification of doctor account was not successful. Please retry.", 500));
+        }
         // send response
         res.status(200).json({
             status: true,
@@ -195,7 +203,11 @@ module.exports.modifyDoctor = async (req, res, next) => {
 
         });
 
-    } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
+    } catch (error) {
+        deleteImage(req.file.path);
+
+        return next(new errorHandling(error.message, error.statusCode || 500));
+    }
 }
 
 // @method:DELETE
