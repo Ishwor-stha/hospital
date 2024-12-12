@@ -1,5 +1,4 @@
-
-module.exports.forgotMessage = (code,siteUrl) => {
+module.exports.forgotMessage = (code, siteUrl) => {
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -33,7 +32,7 @@ module.exports.forgotMessage = (code,siteUrl) => {
         .button {
             display: inline-block;
             background-color: #007BFF;
-            color: #ffffff;
+            color: white !important;
             text-decoration: none;
             padding: 10px 20px;
             border-radius: 5px;
@@ -55,7 +54,6 @@ module.exports.forgotMessage = (code,siteUrl) => {
             Password Reset Request
         </div>
         <div class="body">
-            
             <p>We received a request to reset your password. Click the button below to proceed with resetting your password. This link will expire in 10 minutes.</p>
             <p style="text-align: center;">
                 <a href="${siteUrl}/${code}" class="button">Reset Password</a>
@@ -64,7 +62,6 @@ module.exports.forgotMessage = (code,siteUrl) => {
             <p>Stay safe,</p>
             <p><strong>${process.env.hospital_name}</strong></p>
         </div>
-       
     </div>
 </body>
 </html>
