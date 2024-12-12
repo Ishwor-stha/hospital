@@ -58,7 +58,7 @@ module.exports.forgotMessage = (code, siteUrl) => {
             <p style="text-align: center;">
                 <a href="${siteUrl}/${code}" class="button">Reset Password</a>
             </p>
-            <p>If you didn’t request this, you can safely ignore this email. Your password will not change until you access the link above and create a new one.</p>
+            <p>If you didn't request this, you can safely ignore this email. Your password will not change until you access the link above and create a new one.</p>
             <p>Stay safe,</p>
             <p><strong>${process.env.hospital_name}</strong></p>
         </div>
