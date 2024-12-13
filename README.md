@@ -1,66 +1,84 @@
-# Patient Management System API
+# Hospital Management System (HMS)
 
-This is a backend API for managing patient data in a hospital management system. The API allows authorized users (admin, root, doctor) to perform CRUD operations on patient records, including creating new patients, updating their information, retrieving patient details, and deleting records. It also supports patient login, password reset functionality, and searching for patients by name or contact.
+## Overview
+The **Hospital Management System (HMS)** is a comprehensive web-based platform designed to handle hospital operations. It provides an easy-to-use interface for **Admin**, **Doctors**, and **Patients** to manage various tasks like user authentication, appointments, medical reports, and patient details.
+
+---
 
 ## Features
 
-- **CRUD Operations for Patients**: Create, read, update, and delete patient records.
-- **Patient Login**: Login functionality with JWT authentication.
-- **Password Reset**: Allows patients to reset their passwords using a unique token.
-- **Search Patients**: Search for patients by name or contact number.
-- **Role-Based Access Control**: Access is restricted based on user roles (admin, root, doctor).
+### 1. Admin Features
+Admins have full control over the system and can manage doctors, patients, appointments, and more.
 
-## Endpoints
+#### Key Admin Functions:
+- **Admin Authentication**: Login, create, and manage admin accounts.
+- **Doctor Management**: Add, update, and delete doctor profiles.
+- **Patient Management**: View, update, and delete patient records.
+- **Appointment Management**: View and manage all patient appointments.
+- **Password Management**: Admins can reset their password and change login credentials.
 
-### 1. **Get All Patients**
-- **Endpoint**: `GET /api/patient/get-patients`
-- **Description**: Retrieves all patient records.
-- **Authorization**: Requires `root`, `admin`, or `doctor` role.
+#### Admin Routes:
+- `POST /login-admin`: Admin login.
+- `GET /get-admin`: View admin profile.
+- `POST /create-admin`: Create a new admin.
+- `PATCH /update-admin`: Update admin profile.
+- `DELETE /delete-admin/:id`: Delete an admin by ID.
+- `GET /get-doctorByID`: Get a doctor by ID, phone, or name.
+- `POST /create-doctor`: Add a new doctor.
+- `PATCH /update-doctor/:id`: Update doctor information.
+- `DELETE /delete-doctor/:id`: Delete a doctor by ID.
+- `PATCH /forget-password`: Request password reset.
+- `PATCH /reset-password/:code`: Reset password using a reset code.
 
-### 2. **Get Patient by ID**
-- **Endpoint**: `GET /api/patient/get-patient/:id`
-- **Description**: Retrieves a patient by their patient ID.
-- **Authorization**: Requires `root`, `admin`, or `doctor` role.
+---
 
-### 3. **Create Patient**
-- **Endpoint**: `POST /api/patient/create-patients`
-- **Description**: Creates a new patient record.
-- **Authorization**: Requires `root` or `admin` role.
+### 2. Doctor Features
+Doctors can log in, manage patient appointments, and update medical reports. They also have access to their own profile and can update their information.
 
-### 4. **Login Patient**
-- **Endpoint**: `POST /api/patient/login-patient`
-- **Description**: Patient login with email and password.
-- **Authorization**: None (for patient only).
+#### Key Doctor Functions:
+- **Doctor Authentication**: Login and manage doctor accounts.
+- **Appointment Management**: View, approve, or reject patient appointments.
+- **Medical Reports**: Create, update, and view patient medical reports.
+- **Profile Management**: Update doctor details.
 
-### 5. **Update Patient**
-- **Endpoint**: `PATCH /api/patient/update-patient/:id`
-- **Description**: Updates a patient's details.
-- **Authorization**: Requires `root` or `admin` role.
+#### Doctor Routes:
+- `POST /login-doctor`: Doctor login.
+- `PATCH /update-doctor`: Update doctor profile.
+- `POST /create-report`: Create a medical report for a patient.
+- `PATCH /update-report`: Update an existing medical report.
+- `GET /view-report`: View a specific medical report.
+- `GET /get-doctors`: Get a list of doctors.
+- `GET /view-appointment`: View patient appointments for a doctor.
+- `PATCH /approve-appointment`: Approve a patient appointment.
+- `PATCH /reject-appointment`: Reject a patient appointment.
+- `PATCH /forget-password`: Request password reset.
+- `PATCH /reset-password/:code`: Reset password using a reset code.
 
-### 6. **Delete Patient**
-- **Endpoint**: `DELETE /api/patient/delete-patient/:id`
-- **Description**: Deletes a patient record.
-- **Authorization**: Requires `root` or `admin` role.
+---
 
-### 7. **Search Patients**
-- **Endpoint**: `GET /api/patient/search`
-- **Description**: Searches for patients by name or contact number.
-- **Authorization**: Requires `root`, `admin`, or `doctor` role.
+### 3. Patient Features
+Patients can register, log in, manage their appointments, and view their medical reports.
 
-### 8. **Forgot Password**
-- **Endpoint**: `PATCH /api/patient/forget-password`
-- **Description**: Sends a password reset link to the patient's email.
-- **Authorization**: None (for patient only).
+#### Key Patient Functions:
+- **Patient Authentication**: Login, update profile, and manage password.
+- **Appointment Management**: Create and view patient appointments.
+- **Medical Reports**: View medical reports generated by doctors.
+- **Profile Management**: Update patient details and photo.
 
-### 9. **Reset Password**
-- **Endpoint**: `PATCH /api/patient/reset-password/:code`
-- **Description**: Resets the patient's password using a reset token.
-- **Authorization**: None (for patient only).
+#### Patient Routes:
+- `POST /login-patient`: Patient login.
+- `PATCH /update-patient`: Update patient profile.
+- `POST /create-appointment`: Book a new appointment with a doctor.
+- `GET /view-appointment`: View patient appointments.
+- `DELETE /delete-patient/:id`: Delete a patient by ID.
+- `GET /view-report`: View specific medical report for a patient.
+- `GET /search`: Search for a patient by name.
+- `PATCH /forget-password`: Request password reset.
+- `PATCH /reset-password/:code`: Reset password using a reset code.
 
-## Usage
-
-### 1. Install Dependencies
-Make sure to install the necessary dependencies by running the following command:
-
-```bash
-npm install
+---
+- **Backend:** Node.js, Express.js
+- **Database:** MongoDB (or your choice of database)
+- **Authentication:** JWT (JSON Web Tokens)
+- **File Handling:** Multer (for file uploads, e.g., doctor photos)
+- **Password Security:** bcrypt
