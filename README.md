@@ -1,20 +1,36 @@
 # Hospital Management System (HMS)
 
 ## Overview
-The **Hospital Management System (HMS)** is a comprehensive web-based platform designed to handle hospital operations. It provides an easy-to-use interface for **Admin**, **Doctors**, and **Patients** to manage various tasks like user authentication, appointments, medical reports, and patient details.
+The **Hospital Management System (HMS)** is a comprehensive web-based platform designed to handle hospital operations. It provides an easy-to-use interface for **Root**, **Admin**, **Doctors**, and **Patients** to manage various tasks like user authentication, appointments, medical reports, and patient details.
 
 ---
 
 ## Features
 
-### 1. Admin Features
-Admins have full control over the system and can manage doctors, patients, appointments, and more.
+### 1. Root Features
+The **Root** user has full control over the system. The root user can manage both admin and doctor accounts and modify core settings for the hospital system.
+
+#### Key Root Functions:
+- **Root Authentication**: Login and manage root account.
+- **Admin Management**: Create, update, and delete admin profiles.
+- **Doctor Management**: Add, update, and delete doctor profiles.
+- **Password Management**: Reset root password.
+
+#### Root Routes:
+- `POST /login-root`: Root login.
+- `POST /create-admin`: Create a new admin.
+- `PATCH /update-admin-root/:id`: Update admin profile by root.
+- `DELETE /delete-admin/:id`: Delete an admin by ID.
+
+---
+
+### 2. Admin Features
+Admins have control over the hospital system to manage doctor and patient profiles, appointments, and more.
 
 #### Key Admin Functions:
-- **Admin Authentication**: Login, create, and manage admin accounts.
+- **Admin Authentication**: Login.
 - **Doctor Management**: Add, update, and delete doctor profiles.
 - **Patient Management**: View, update, and delete patient records.
-- **Appointment Management**: View and manage all patient appointments.
 - **Password Management**: Admins can reset their password and change login credentials.
 
 #### Admin Routes:
@@ -22,7 +38,6 @@ Admins have full control over the system and can manage doctors, patients, appoi
 - `GET /get-admin`: View admin profile.
 - `POST /create-admin`: Create a new admin.
 - `PATCH /update-admin`: Update admin profile.
-- `DELETE /delete-admin/:id`: Delete an admin by ID.
 - `GET /get-doctorByID`: Get a doctor by ID, phone, or name.
 - `POST /create-doctor`: Add a new doctor.
 - `PATCH /update-doctor/:id`: Update doctor information.
@@ -32,14 +47,14 @@ Admins have full control over the system and can manage doctors, patients, appoi
 
 ---
 
-### 2. Doctor Features
+### 3. Doctor Features
 Doctors can log in, manage patient appointments, and update medical reports. They also have access to their own profile and can update their information.
 
 #### Key Doctor Functions:
 - **Doctor Authentication**: Login and manage doctor accounts.
 - **Appointment Management**: View, approve, or reject patient appointments.
 - **Medical Reports**: Create, update, and view patient medical reports.
-- **Profile Management**: Update doctor details.
+- **Profile Management**: Update doctor details ie(Only password).
 
 #### Doctor Routes:
 - `POST /login-doctor`: Doctor login.
@@ -56,7 +71,7 @@ Doctors can log in, manage patient appointments, and update medical reports. The
 
 ---
 
-### 3. Patient Features
+### 4. Patient Features
 Patients can register, log in, manage their appointments, and view their medical reports.
 
 #### Key Patient Functions:
@@ -77,8 +92,13 @@ Patients can register, log in, manage their appointments, and view their medical
 - `PATCH /reset-password/:code`: Reset password using a reset code.
 
 ---
+
+## Technology Stack
+
 - **Backend:** Node.js, Express.js
-- **Database:** MongoDB (or your choice of database)
+- **Database:** MongoDB
 - **Authentication:** JWT (JSON Web Tokens)
 - **File Handling:** Multer (for file uploads, e.g., doctor photos)
 - **Password Security:** bcrypt
+
+---
