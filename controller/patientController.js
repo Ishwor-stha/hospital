@@ -254,6 +254,7 @@ module.exports.deletePatient = async (req, res, next) => {
 
 
 }
+
 //@endpoint:localhost:3000/api/patient/search
 //@method:GET
 //@desc:Get patient details by their name or contact

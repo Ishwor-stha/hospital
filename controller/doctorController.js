@@ -1,14 +1,14 @@
 const doctorModel = require("../models/doctorModel");
 const emailValidation = require("../utils/emailValidation");
-const errorHandling = require("../utils/errorHandling")
-const bcrypt = require("bcryptjs")
+const errorHandling = require("../utils/errorHandling");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto")
+const crypto = require("crypto");
 const { forgotMessage } = require("../utils/forgetMessage");
-const sendMail = require("../utils/sendMail")
+const sendMail = require("../utils/sendMail");
 const fs = require('fs');
-const path = require("path")
-const {deleteImage}=require("../utils/deleteImage")
+const path = require("path");
+const {deleteImage}=require("../utils/deleteImage");
 
 // @method:GET 
 // @endpoint:localhost:3000/api/admin/get-doctors
@@ -23,7 +23,7 @@ module.exports.getDoctors = async (req, res, next) => {
         res.status(200).json({
             status: true,
             doctors
-        })
+        });
 
 
     } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
@@ -51,7 +51,7 @@ module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
         res.json({
             message: true,
             details
-        })
+        });
 
     } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
@@ -62,10 +62,10 @@ module.exports.getDoctorByPhoneOrName = async (req, res, next) => {
 module.exports.createDoctor = async (req, res, next) => {
     try {
         // allow only if user is root or admin
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403));
 
         // if body is empty
-        if (Object.keys(req.body).length <= 0) return next(new errorHandling(" Empty request body: Ensure you're sending the correct information.", 400))
+        if (Object.keys(req.body).length <= 0) return next(new errorHandling(" Empty request body: Ensure you're sending the correct information.", 400));
         //list of fields
         let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword", "photo"];
         let upload = {}
@@ -111,16 +111,16 @@ module.exports.modifyDoctor = async (req, res, next) => {
     try {
         //allow only if user is admin or root
 
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403));
         let photoPath = null;
         if (req.file) {
             photoPath = req.file.path; // Store the photo path 
         }
         // if body is empty
-        if (Object.keys(req.body).length <= 0 && !photoPath) return next(new errorHandling("Empty request body: Ensure you're sending the correct information.", 400))
+        if (Object.keys(req.body).length <= 0 && !photoPath) return next(new errorHandling("Empty request body: Ensure you're sending the correct information.", 400));
         // listing the possible keys of object
         let list = ["name", "department", "specialization", "experience", "phone", "email", "availability", "password", "confirmPassword", "photo"];
-        let upload = {}
+        let upload = {};
         // if req.body contain email
         if (req.body.email) {
             // validate email
@@ -143,7 +143,7 @@ module.exports.modifyDoctor = async (req, res, next) => {
         // id from URL
         const id = req.params.id;
         // if no id is given on URL
-        if (!id) return next(new errorHandling("Empty id of doctor: Ensure you're sending the correct information.", 400))
+        if (!id) return next(new errorHandling("Empty id of doctor: Ensure you're sending the correct information.", 400));
         //iterate every key on req.body
         for (key in req.body) {
             // if key matched with the above list array
@@ -210,14 +210,14 @@ module.exports.modifyDoctor = async (req, res, next) => {
 module.exports.deleteDoctor = async (req, res, next) => {
     try {
         //allow only if user is root or admin
-        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403))
+        if (!["root", "admin"].includes(req.admin.role)) return next(new errorHandling("This task is restricted for authorized users only.", 403));
         // id from url
-        let id = req.params.id
+        let id = req.params.id;
         // deleting doctor
         let delDoctor = await doctorModel.findByIdAndDelete(id);
 
         // if no doctor by this id
-        if (!delDoctor || Object.keys(delDoctor).length <= 0) return next(new errorHandling("No doctor record found for the provided ID. Please check and try again.", 404))
+        if (!delDoctor || Object.keys(delDoctor).length <= 0) return next(new errorHandling("No doctor record found for the provided ID. Please check and try again.", 404));
         // send response
         res.status(200).json({
             status: true,
@@ -234,7 +234,7 @@ module.exports.deleteDoctor = async (req, res, next) => {
 module.exports.doctorLogin = async (req, res, next) => {
     try {
         //extract all keys presented on req.body object
-        const keys = Object.keys(req.body)
+        const keys = Object.keys(req.body);
         // if no keys length is not equal to 2 or key is not email or  password then send error
         if (keys.length !== 2 || !keys.includes('email') || !keys.includes('password')) return next(new errorHandling("Request body must only contain 'email' and 'password'", 400));
         // destructuring email and password from req.body
@@ -247,10 +247,10 @@ module.exports.doctorLogin = async (req, res, next) => {
         if (!doctor || Object.keys(doctor).length <= 0) return next(new errorHandling("We couldn't find an doctor record matching this email. Please verify and try again.", 404));
         // store the password from database 
 
-        const dbPassword = doctor.password
+        const dbPassword = doctor.password;
         // compare the user password and database password
-        const isvalid = await bcrypt.compare(password, dbPassword)
-        // if password is not valid
+        const isvalid = await bcrypt.compare(password, dbPassword);
+        // if password is not valid;
         if (!isvalid) return next(new errorHandling("The password you entered is incorrect. Please try again.", 400));
         // create payload for jwt
         const payload = {
@@ -333,7 +333,7 @@ module.exports.forgetPassword = async (req, res, next) => {
         // validate email
         if (!emailValidation(email)) return next(new errorHandling("The email address entered is invalid. Kindly correct it.", 400));
         // check detail in db
-        const checkDoctor = await doctorModel.findOne({ email }, "name")
+        const checkDoctor = await doctorModel.findOne({ email }, "name");
         // no detail found
         if (!checkDoctor || Object.keys(checkDoctor).length <= 0) return next(new errorHandling("We couldn't find an doctor record matching this email. Please verify and try again.", 404));
         const code = crypto.randomBytes(16).toString("hex"); // Generate a random code
@@ -342,19 +342,19 @@ module.exports.forgetPassword = async (req, res, next) => {
         const update = await doctorModel.findByIdAndUpdate(checkDoctor._id, {
             "code": code,
             "code_expire": expire
-        })
+        });
         // if update fails
         if (!update || Object.keys(update).length <= 0) return next(new errorHandling("Password reset link was not able to send to email. Please retry. ", 500));
         // message part
-        const siteUrl = process.env.forgotUrlDoctor
-        const message = forgotMessage(code, siteUrl)
-        const subject = "Forget password reset token"
+        const siteUrl = process.env.forgotUrlDoctor;
+        const message = forgotMessage(code, siteUrl);
+        const subject = "Forget password reset token";
         await sendMail(next, message, subject, update.email, update.name);
         // send response
         res.json({
             status: true,
             message: "Password reset link is sent to your email account.The link will expire after 10 minutes "
-        })
+        });
     } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }
 }
 
@@ -382,8 +382,8 @@ module.exports.resetPassword = async (req, res, next) => {
         // if the expire code is less than current date
         if (dbCode.code_expire < Date.now()) {
             dbCode.code_expire = undefined;
-            dbCode.code = undefined
-            await dbCode.save()
+            dbCode.code = undefined;
+            await dbCode.save();
             return next(new errorHandling("Reset token is invalid or expired.Please try again.", 400));
         }
         // hash the password
@@ -397,13 +397,13 @@ module.exports.resetPassword = async (req, res, next) => {
         if (!update) return next(new errorHandling("Updating the password was not successful. Please retry again.", 500));
         // set code and code_expire to undefined
         dbCode.code_expire = undefined;
-        dbCode.code = undefined
-        await dbCode.save()
+        dbCode.code = undefined;
+        await dbCode.save();
         // send response
         res.status(200).json({
             status: true,
             message: "Password Updated Sucessfully"
-        })
+        });
 
 
     } catch (error) { return next(new errorHandling(error.message, error.statusCode || 500)); }

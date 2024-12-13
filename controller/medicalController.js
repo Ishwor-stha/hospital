@@ -137,7 +137,7 @@ module.exports.viewMedicalReport = async (req, res, next) => {
         res.status(200).json({
             status: true,
             medicalReport: view
-        })
+        });
     } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 }
 

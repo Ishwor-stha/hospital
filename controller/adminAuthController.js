@@ -21,7 +21,7 @@ module.exports.checkJwt = (req, res, next) => {
             req.admin = decode;
 
             next();
-        })
+        });
     } catch (error) {return next(new errorHandling(error.message, error.statusCode || 500));}
 };
 
